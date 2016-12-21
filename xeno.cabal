@@ -1,0 +1,27 @@
+name: xeno
+version: 0
+build-type: Simple
+cabal-version: >=1.10
+
+library
+  hs-source-dirs: src
+  ghc-options: -Wall -O2
+  exposed-modules: Xeno
+  build-depends: base >= 4.7 && < 5, bytestring, vector
+  default-language: Haskell2010
+
+test-suite xeno-test
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is: Main.hs
+  build-depends: base, xeno, hexml, hspec
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
+  default-language: Haskell2010
+
+benchmark xeno-bench
+  type: exitcode-stdio-1.0
+  hs-source-dirs: bench
+  main-is: Main.hs
+  build-depends: base, xeno, hexml, criterion, bytestring, xml, deepseq
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N -O2
+  default-language: Haskell2010
