@@ -8,20 +8,20 @@ import qualified Xeno
 
 main :: IO ()
 main = do
+  f4kb <- S.readFile "data/books-4kb.xml"
+  f42kb <- S.readFile "data/ibm-oasis-42kb.xml"
+  f52kb <- S.readFile "data/oasis-52kb.xml"
+  f182kb <- S.readFile "data/japanese-182kb.xml"
   mainWith
-    (do io
+    (do func
           "4kb parse"
-          (\fp -> fmap Xeno.parse (S.readFile fp))
-          "data/books-4kb.xml"
-        io
+          Xeno.parse f4kb
+        func
           "42kb parse"
-          (\fp -> fmap Xeno.parse (S.readFile fp))
-          "data/ibm-oasis-42kb.xml"
-        io
+          Xeno.parse f42kb
+        func
           "52kb parse"
-          (\fp -> fmap Xeno.parse (S.readFile fp))
-          "data/oasis-52kb.xml"
-        io
+          Xeno.parse f52kb
+        func
           "182kb parse"
-          (\fp -> fmap Xeno.parse (S.readFile fp))
-          "data/japanese-182kb.xml")
+          Xeno.parse f182kb)
