@@ -17,6 +17,7 @@ Here are some benchmarks.
 
 Benchmarks:
 
+    benchmarking 4KB/hexml
     time                 6.181 μs   (6.173 μs .. 6.190 μs)
                          1.000 R²   (1.000 R² .. 1.000 R²)
     mean                 6.218 μs   (6.201 μs .. 6.249 μs)
