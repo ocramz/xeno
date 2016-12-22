@@ -18,10 +18,10 @@ test-suite xeno-test
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   default-language: Haskell2010
 
-benchmark xeno-bench
+benchmark xeno-speed-bench
   type: exitcode-stdio-1.0
   hs-source-dirs: bench
-  main-is: Main.hs
+  main-is: Speed.hs
   build-depends: base, xeno, hexml, criterion, bytestring, xml, deepseq
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N -O2
   default-language: Haskell2010
