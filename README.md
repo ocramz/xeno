@@ -7,7 +7,7 @@ A test XML parser in Haskell.
   even processing attributes.
 * Just to see what the baseline is.
 
-Here are some benchmarks.
+Speed benchmarks.
 
 * hexml is a parser written in C, so that is the baseline.
 * xml is written in Haskell, which is much slower: 1.917ms is
@@ -15,7 +15,15 @@ Here are some benchmarks.
 * Apparently a baseline jumping of `<` to `>` and so on in Haskell
   is not bad.
 
-Benchmarks:
+Memory benchmarks for Xeno:
+
+    Case         Bytes  GCs  Check
+    4kb parse    1,168    0  OK
+    42kb parse   1,560    0  OK
+    52kb parse   1,168    0  OK
+    182kb parse  1,168    0  OK
+
+Speed benchmarks:
 
     benchmarking 4KB/hexml
     time                 6.181 μs   (6.173 μs .. 6.190 μs)
