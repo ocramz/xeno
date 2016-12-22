@@ -1,7 +1,7 @@
 {-# LANGUAGE StandaloneDeriving, DeriveGeneric #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
--- | Main benchmark suite.
+-- | Benchmark speed.
 
 module Main where
 
