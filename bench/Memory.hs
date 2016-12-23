@@ -24,4 +24,16 @@ main = do
           Xeno.parse f52kb
         func
           "182kb parse"
-          Xeno.parse f182kb)
+          Xeno.parse f182kb
+        func
+          "4kb parseErikd"
+          Xeno.parseErikd f4kb
+        func
+          "42kb parseErikd"
+          Xeno.parseErikd f42kb
+        func
+          "52kb parseErikd"
+          Xeno.parseErikd f52kb
+        func
+          "182kb parseErikd"
+          Xeno.parseErikd f182kb)
