@@ -1,4 +1,6 @@
+{-# LANGUAGE UnliftedFFITypes #-}
 {-# LANGUAGE Unsafe #-}
+{-# LANGUAGE MagicHash #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -8,16 +10,19 @@
 
 module Xeno
   ( parse
+  , parseByteArray
   , parseErikd
   ) where
 
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
+import           Data.ByteString.ByteArray
 import qualified Data.ByteString.Internal as BSI
 import           Data.Word
 import qualified Foreign.ForeignPtr as FP
 import qualified Foreign.Ptr as FP
 import qualified Foreign.Storable as FS
+import           GHC.Prim
 import qualified System.IO.Unsafe as U
 
 -- | Get index of an element starting from offset.
@@ -65,3 +70,16 @@ parseErikd (BSI.PS fptr offset len) =
             62 {- '>' -} -> pure ()
             _ -> pure ()
           parseTags ptr (index + 1)
+
+parseByteArray :: ByteArray -> ()
+parseByteArray (ByteArray array) = open 0#
+  where
+    len = sizeofByteArray# array
+    open i =
+      case i <# len of
+        0# -> ()
+        _ ->
+          case indexIntArray# array i of
+            60# -> open (i +# 1#)
+            62# -> open (i +# 1#)
+            _ -> open (i +# 1#)
