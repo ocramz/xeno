@@ -25,6 +25,7 @@ main =
              "4KB"
              [ bench "hexml" (whnf Hexml.parse input)
              , bench "xeno" (whnf Xeno.parse input)
+             , bench "xeno-erikd" (whnf Xeno.parseErikd input)
              , bench "xml" (nf XML.parseXMLDoc input)
              ])
     , env
@@ -34,6 +35,7 @@ main =
              "42KB"
              [ bench "hexml" (whnf Hexml.parse input)
              , bench "xeno" (whnf Xeno.parse input)
+             , bench "xeno-erikd" (whnf Xeno.parseErikd input)
              , bench "xml" (nf XML.parseXMLDoc input)
              ])
     , env
@@ -43,6 +45,7 @@ main =
              "52KB"
              [ bench "hexml" (whnf Hexml.parse input)
              , bench "xeno" (whnf Xeno.parse input)
+             , bench "xeno-erikd" (whnf Xeno.parseErikd input)
              , bench "xml" (nf XML.parseXMLDoc input)
              ])
     , env
@@ -52,6 +55,7 @@ main =
              "182KB"
              [ bench "hexml" (whnf Hexml.parse input)
              , bench "xeno" (whnf Xeno.parse input)
+             , bench "xeno-erikd" (whnf Xeno.parseErikd input)
              , bench "xml" (nf XML.parseXMLDoc input)
              ])
     ]
