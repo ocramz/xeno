@@ -6,11 +6,19 @@
 
 -- | Test XML parser.
 
-module Xeno (parse) where
+module Xeno
+  ( parse
+  , parseErikd
+  ) where
 
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
+import qualified Data.ByteString.Internal as BSI
 import           Data.Word
+import qualified Foreign.ForeignPtr as FP
+import qualified Foreign.Ptr as FP
+import qualified Foreign.Storable as FS
+import qualified System.IO.Unsafe as U
 
 -- | Parse an XML document.
 parse :: ByteString -> ()
@@ -39,3 +47,20 @@ openTagChar = 60 -- '<'
 -- | Close tag character.
 closeTagChar :: Word8
 closeTagChar = 62 -- '>'
+
+parseErikd :: ByteString -> ()
+parseErikd (BSI.PS fptr offset len) =
+  U.unsafePerformIO . FP.withForeignPtr fptr $ \ srcptr ->
+    let ptr = FP.plusPtr srcptr offset
+    in parseTags ptr 0
+  where
+    parseTags :: FP.Ptr Word8 -> Int -> IO ()
+    parseTags ptr index
+      | index >= len = pure ()
+      | otherwise = do
+          el <- FS.peekElemOff ptr index
+          case el of
+            60 {- '<' -} -> pure ()
+            62 {- '>' -} -> pure ()
+            _ -> pure ()
+          parseTags ptr (index + 1)
