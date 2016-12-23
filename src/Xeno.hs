@@ -20,7 +20,20 @@ import qualified Foreign.Ptr as FP
 import qualified Foreign.Storable as FS
 import qualified System.IO.Unsafe as U
 
--- | Parse an XML document.
+-- | Get index of an element starting from offset.
+elemIndexFrom :: Word8 -> ByteString -> Int -> Maybe Int
+elemIndexFrom c str offset = fmap (+ offset) (S.elemIndex c (S.drop offset str))
+{-# INLINE elemIndexFrom #-}
+
+-- | Open tag character.
+openTagChar :: Word8
+openTagChar = 60 -- '<'
+
+-- | Close tag character.
+closeTagChar :: Word8
+closeTagChar = 62 -- '>'
+
+-- | Naive version with ByteString.
 parse :: ByteString -> ()
 parse str =
   parseTags 0
@@ -35,19 +48,7 @@ parse str =
             Just fromGt -> do
               parseTags (fromGt + 1)
 
--- | Get index of an element starting from offset.
-elemIndexFrom :: Word8 -> ByteString -> Int -> Maybe Int
-elemIndexFrom c str offset = fmap (+ offset) (S.elemIndex c (S.drop offset str))
-{-# INLINE elemIndexFrom #-}
-
--- | Open tag character.
-openTagChar :: Word8
-openTagChar = 60 -- '<'
-
--- | Close tag character.
-closeTagChar :: Word8
-closeTagChar = 62 -- '>'
-
+-- | ErikD's contribution.
 parseErikd :: ByteString -> ()
 parseErikd (BSI.PS fptr offset len) =
   U.unsafePerformIO . FP.withForeignPtr fptr $ \ srcptr ->
