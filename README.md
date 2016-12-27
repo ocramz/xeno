@@ -6,6 +6,8 @@ The [hexml](https://github.com/ndmitchell/hexml) Haskell library uses
 an XML parser written in C, so that is the baseline we're trying to
 beat or match roughly.
 
+Current implementation:
+
 * It currently doesn't return a result.
 * It does not process attributes yet.
 * It walks across a string looking for tags, non-hierarchically.
