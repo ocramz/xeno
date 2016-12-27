@@ -50,7 +50,7 @@ parse str = findGt 0
       case elemIndexFrom closeTagChar str index of
         Nothing -> ()
         Just fromGt -> do
-          findGt (fromGt + 1)
+          findGt fromGt
 
 -- | ErikD's contribution.
 parseErikd :: ByteString -> ()
