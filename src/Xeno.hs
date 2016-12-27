@@ -1,7 +1,3 @@
-{-# LANGUAGE Unsafe #-}
-{-# LANGUAGE UnliftedFFITypes #-}
-{-# LANGUAGE Unsafe #-}
-{-# LANGUAGE MagicHash #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
