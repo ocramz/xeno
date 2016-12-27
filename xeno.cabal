@@ -5,8 +5,8 @@ cabal-version: >=1.10
 
 library
   hs-source-dirs: src
-  ghc-options: -Wall -O2
-  exposed-modules: Xeno, Data.ByteString.ByteArray
+  ghc-options: -Wall -O2 -ddump-simpl
+  exposed-modules: Xeno
   build-depends: base >= 4.7 && < 5, bytestring, vector, deepseq, ghc-prim
   default-language: Haskell2010
 
