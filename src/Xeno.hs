@@ -45,14 +45,12 @@ parse str = findLT 0
             else findCommentEnd (fromDash + 1)
           where this = S.drop index str
     findTagName index0 =
-      case S.findIndex (not . isTagName) (S.drop index str) of
-        Nothing -> error "Couldn't find end of tag name."
-        Just ((+ index) -> spaceOrCloseTag) ->
-          if S.index str spaceOrCloseTag == closeTagChar
-            then findLT spaceOrCloseTag
-            else if S.index str spaceOrCloseTag == spaceChar
-                   then findGT spaceOrCloseTag
-                   else error "Expecting space or closing '>' after tag name."
+      let spaceOrCloseTag = findEndOfTagName str index
+      in if S.index str spaceOrCloseTag == closeTagChar
+           then findLT spaceOrCloseTag
+           else if S.index str spaceOrCloseTag == spaceChar
+                  then findGT spaceOrCloseTag
+                  else error "Expecting space or closing '>' after tag name."
       where
         index =
           if S.index str index0 == questionChar ||
@@ -64,6 +62,14 @@ parse str = findLT 0
         Nothing -> error "Couldn't find matching '>' character."
         Just fromGt -> do
           findLT (fromGt + 1)
+
+-- | Basically @findIndex (not . isTagName)@, but doesn't allocate.
+findEndOfTagName :: ByteString -> Int -> Int
+findEndOfTagName str index =
+  if not (isTagName (S.index str index))
+     then index
+     else findEndOfTagName str (index + 1)
+{-# INLINE findEndOfTagName #-}
 
 -- | Is the character a valid tag name constituent?
 isTagName :: Word8 -> Bool
