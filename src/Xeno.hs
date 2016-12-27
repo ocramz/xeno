@@ -37,7 +37,7 @@ parse str = findGt 0
         Nothing -> error "Couldn't find comment closing '-->' characters."
         Just fromDash ->
           if (S.index this 0 == commentChar)
-             -- We could validate the here, but we're a liberal
+             -- We could validate the dashes here, but we're a liberal
              -- parser, not a validating parser.
               &&
              (S.index this 1 == closeTagChar)
@@ -52,9 +52,7 @@ parse str = findGt 0
             then findGt spaceOrCloseTag
             else if S.head this == spaceChar
                    then findLt spaceOrCloseTag
-                   else error
-                          ("Expecting space or closing '>' after tag name, but got: " ++
-                           show this)
+                   else error "Expecting space or closing '>' after tag name."
           where this = S.drop spaceOrCloseTag str
       where
         index =
