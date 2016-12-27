@@ -19,9 +19,9 @@ import           Data.Word
 
 -- | Naive version with ByteString.
 parse :: ByteString -> ()
-parse str = findGt 0
+parse str = findLT 0
   where
-    findGt index =
+    findLT index =
       case elemIndexFrom openTagChar str index of
         Nothing -> ()
         Just fromLt -> checkOpenComment (fromLt + 1)
@@ -41,7 +41,7 @@ parse str = findGt 0
              -- parser, not a validating parser.
               &&
              (S.index this 1 == closeTagChar)
-            then findGt (fromDash + 2)
+            then findLT (fromDash + 2)
             else findCommentEnd (fromDash + 1)
           where this = S.drop index str
     findTagName index0 =
@@ -49,9 +49,9 @@ parse str = findGt 0
         Nothing -> error "Couldn't find end of tag name."
         Just ((+ index) -> spaceOrCloseTag) ->
           if S.head this == closeTagChar
-            then findGt spaceOrCloseTag
+            then findLT spaceOrCloseTag
             else if S.head this == spaceChar
-                   then findLt spaceOrCloseTag
+                   then findGT spaceOrCloseTag
                    else error "Expecting space or closing '>' after tag name."
           where this = S.drop spaceOrCloseTag str
       where
@@ -60,11 +60,11 @@ parse str = findGt 0
              S.head (S.drop index0 str) == slashChar
             then index0 + 1
             else index0
-    findLt index =
+    findGT index =
       case elemIndexFrom closeTagChar str index of
         Nothing -> error "Couldn't find matching '>' character."
         Just fromGt -> do
-          findGt (fromGt + 1)
+          findLT (fromGt + 1)
 
 -- | Is the character a valid tag name constituent?
 isTagName :: Word8 -> Bool
