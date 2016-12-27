@@ -1,62 +1,64 @@
 # xeno
 
-A test XML parser in Haskell.
+A WIP XML parser in pure Haskell.
 
-* It currently doesn't do anything.
-* It walks across a string looking for tags in a dumb way, without
-  even processing attributes.
-* Just to see what the baseline is.
+hexml is a parser written in C, so that is the baseline we're trying
+to beat or match roughly.
 
-Speed benchmarks.
-
-* hexml is a parser written in C, so that is the baseline.
+* It currently doesn't return a result.
+* It does not process attributes yet.
+* It walks across a string looking for tags, non-hierarchically.
+* It handles comments.
+* It currently is faster than Hexml, and does not allocate linearly
+  for the size of the input. In other words, it runs in constant or
+  practically constant space (see the memory benchmarks below).
 
 Memory benchmarks for Xeno:
 
     Case        Bytes  GCs  Check
     4kb parse   1,160    0  OK
-    42kb parse  1,472    0  OK
-    52kb parse  1,160    0  OK
+    42kb parse  1,160    0  OK
+    52kb parse  1,472    0  OK
 
 Speed benchmarks:
 
     benchmarking 4KB/hexml
-    time                 6.149 μs   (6.125 μs .. 6.183 μs)
+    time                 6.190 μs   (6.159 μs .. 6.230 μs)
                          1.000 R²   (1.000 R² .. 1.000 R²)
-    mean                 6.185 μs   (6.159 μs .. 6.215 μs)
-    std dev              93.00 ns   (82.22 ns .. 105.0 ns)
+    mean                 6.216 μs   (6.195 μs .. 6.257 μs)
+    std dev              94.07 ns   (83.83 ns .. 105.7 ns)
     variance introduced by outliers: 13% (moderately inflated)
 
     benchmarking 4KB/xeno
-    time                 2.691 μs   (2.665 μs .. 2.712 μs)
-                         0.999 R²   (0.999 R² .. 0.999 R²)
-    mean                 2.700 μs   (2.661 μs .. 2.744 μs)
-    std dev              139.7 ns   (106.6 ns .. 219.0 ns)
+    time                 4.215 μs   (4.175 μs .. 4.247 μs)
+                         0.999 R²   (0.998 R² .. 0.999 R²)
+    mean                 4.246 μs   (4.189 μs .. 4.311 μs)
+    std dev              224.9 ns   (164.1 ns .. 289.2 ns)
     variance introduced by outliers: 66% (severely inflated)
 
     benchmarking 31KB/hexml
-    time                 9.209 μs   (9.166 μs .. 9.266 μs)
-                         1.000 R²   (0.999 R² .. 1.000 R²)
-    mean                 9.239 μs   (9.195 μs .. 9.313 μs)
-    std dev              164.0 ns   (104.5 ns .. 246.8 ns)
-    variance introduced by outliers: 16% (moderately inflated)
+    time                 9.519 μs   (9.252 μs .. 9.795 μs)
+                         0.995 R²   (0.992 R² .. 0.998 R²)
+    mean                 9.643 μs   (9.436 μs .. 9.882 μs)
+    std dev              735.3 ns   (541.3 ns .. 905.4 ns)
+    variance introduced by outliers: 78% (severely inflated)
 
     benchmarking 31KB/xeno
-    time                 2.012 μs   (1.996 μs .. 2.030 μs)
+    time                 2.440 μs   (2.415 μs .. 2.463 μs)
                          0.999 R²   (0.999 R² .. 0.999 R²)
-    mean                 2.025 μs   (1.989 μs .. 2.047 μs)
-    std dev              90.80 ns   (72.68 ns .. 113.9 ns)
-    variance introduced by outliers: 59% (severely inflated)
+    mean                 2.439 μs   (2.416 μs .. 2.473 μs)
+    std dev              96.87 ns   (79.85 ns .. 118.0 ns)
+    variance introduced by outliers: 53% (severely inflated)
 
     benchmarking 211KB/hexml
-    time                 255.2 μs   (254.9 μs .. 255.4 μs)
+    time                 258.6 μs   (258.1 μs .. 259.1 μs)
                          1.000 R²   (1.000 R² .. 1.000 R²)
-    mean                 255.2 μs   (255.0 μs .. 255.5 μs)
-    std dev              764.4 ns   (578.6 ns .. 950.8 ns)
+    mean                 258.3 μs   (258.1 μs .. 258.5 μs)
+    std dev              712.5 ns   (564.2 ns .. 873.5 ns)
 
     benchmarking 211KB/xeno
-    time                 140.9 μs   (139.6 μs .. 142.1 μs)
+    time                 200.9 μs   (199.0 μs .. 202.7 μs)
                          0.999 R²   (0.999 R² .. 0.999 R²)
-    mean                 141.0 μs   (139.5 μs .. 142.4 μs)
-    std dev              5.196 μs   (4.415 μs .. 6.999 μs)
-    variance introduced by outliers: 36% (moderately inflated)
+    mean                 201.0 μs   (199.3 μs .. 203.7 μs)
+    std dev              7.278 μs   (5.819 μs .. 10.53 μs)
+    variance introduced by outliers: 34% (moderately inflated)
