@@ -24,10 +24,21 @@ parse str = findGt 0
     findGt index =
       case elemIndexFrom openTagChar str index of
         Nothing -> ()
-        Just fromLt -> findLt fromLt
+        Just fromLt -> checkOpenComment (fromLt + 1)
+    checkOpenComment index =
+      if S.isPrefixOf "!--" (S.drop index str)
+         then findCommentEnd (index + 3)
+         else findLt index
+    findCommentEnd index =
+      case elemIndexFrom commentChar str index of
+        Nothing -> () -- error!
+        Just fromDash ->
+          if S.isPrefixOf "->" (S.drop (fromDash + 1) str)
+             then findGt (fromDash + 2)
+             else findCommentEnd (fromDash + 1)
     findLt index =
       case elemIndexFrom closeTagChar str index of
-        Nothing -> ()
+        Nothing -> () -- error!
         Just fromGt -> do
           findGt fromGt
 
@@ -38,6 +49,10 @@ elemIndexFrom c str offset = fmap (+ offset) (S.elemIndex c (S.drop offset str))
 -- has linear allocation. See git commit with this comment for
 -- results.
 {-# INLINE elemIndexFrom #-}
+
+-- | Open tag character.
+commentChar :: Word8
+commentChar = 45 -- '-'
 
 -- | Open tag character.
 openTagChar :: Word8
