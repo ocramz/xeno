@@ -1,3 +1,4 @@
+{-# LANGUAGE Unsafe #-}
 {-# LANGUAGE UnliftedFFITypes #-}
 {-# LANGUAGE Unsafe #-}
 {-# LANGUAGE MagicHash #-}
@@ -11,19 +12,13 @@
 module Xeno
   ( parse
   , parseByteArray
-  , parseErikd
   ) where
 
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import           Data.ByteString.ByteArray
-import qualified Data.ByteString.Internal as BSI
 import           Data.Word
-import qualified Foreign.ForeignPtr as FP
-import qualified Foreign.Ptr as FP
-import qualified Foreign.Storable as FS
 import           GHC.Prim
-import qualified System.IO.Unsafe as U
 
 -- | Get index of an element starting from offset.
 elemIndexFrom :: Word8 -> ByteString -> Int -> Maybe Int
@@ -51,24 +46,6 @@ parse str = findGt 0
         Nothing -> ()
         Just fromGt -> do
           findGt fromGt
-
--- | ErikD's contribution.
-parseErikd :: ByteString -> ()
-parseErikd (BSI.PS fptr offset len) =
-  U.unsafePerformIO . FP.withForeignPtr fptr $ \ srcptr ->
-    let ptr = FP.plusPtr srcptr offset
-    in parseTags ptr 0
-  where
-    parseTags :: FP.Ptr Word8 -> Int -> IO ()
-    parseTags ptr index
-      | index >= len = pure ()
-      | otherwise = do
-          el <- FS.peekElemOff ptr index
-          case el of
-            60 {- '<' -} -> pure ()
-            62 {- '>' -} -> pure ()
-            _ -> pure ()
-          parseTags ptr (index + 1)
 
 parseByteArray :: ByteArray -> ()
 parseByteArray (ByteArray array) = open 0#
