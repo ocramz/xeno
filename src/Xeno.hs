@@ -48,16 +48,15 @@ parse str = findLT 0
       case S.findIndex (not . isTagName) (S.drop index str) of
         Nothing -> error "Couldn't find end of tag name."
         Just ((+ index) -> spaceOrCloseTag) ->
-          if S.head this == closeTagChar
+          if S.index str spaceOrCloseTag == closeTagChar
             then findLT spaceOrCloseTag
-            else if S.head this == spaceChar
+            else if S.index str spaceOrCloseTag == spaceChar
                    then findGT spaceOrCloseTag
                    else error "Expecting space or closing '>' after tag name."
-          where this = S.drop spaceOrCloseTag str
       where
         index =
-          if S.head (S.drop index0 str) == questionChar ||
-             S.head (S.drop index0 str) == slashChar
+          if S.index str index0 == questionChar ||
+             S.index str index0 == slashChar
             then index0 + 1
             else index0
     findGT index =
