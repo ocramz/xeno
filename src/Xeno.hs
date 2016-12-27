@@ -31,14 +31,14 @@ parse str = findGt 0
          else findLt index
     findCommentEnd index =
       case elemIndexFrom commentChar str index of
-        Nothing -> () -- error!
+        Nothing -> error "Couldn't find comment closing '-->' characters."
         Just fromDash ->
           if S.isPrefixOf "->" (S.drop (fromDash + 1) str)
              then findGt (fromDash + 2)
              else findCommentEnd (fromDash + 1)
     findLt index =
       case elemIndexFrom closeTagChar str index of
-        Nothing -> () -- error!
+        Nothing -> error "Couldn't find matching '>' character."
         Just fromGt -> do
           findGt fromGt
 
