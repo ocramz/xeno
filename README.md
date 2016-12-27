@@ -22,7 +22,7 @@ Memory benchmarks for Xeno:
     Case        Bytes  GCs  Check
     4kb parse   1,160    0  OK
     42kb parse  1,160    0  OK
-    52kb parse  1,472    0  OK
+    52kb parse  1,160    0  OK
 
 Speed benchmarks:
 
