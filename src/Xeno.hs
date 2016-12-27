@@ -49,7 +49,10 @@ parse str = findLT 0
       in if S.index str spaceOrCloseTag == closeTagChar
            then findLT spaceOrCloseTag
            else if S.index str spaceOrCloseTag == spaceChar
-                  then findGT spaceOrCloseTag
+                  then case elemIndexFrom closeTagChar str spaceOrCloseTag of
+                         Nothing -> error "Couldn't find matching '>' character."
+                         Just fromGt -> do
+                           findLT (fromGt + 1)
                   else error "Expecting space or closing '>' after tag name."
       where
         index =
@@ -57,11 +60,6 @@ parse str = findLT 0
              S.index str index0 == slashChar
             then index0 + 1
             else index0
-    findGT index =
-      case elemIndexFrom closeTagChar str index of
-        Nothing -> error "Couldn't find matching '>' character."
-        Just fromGt -> do
-          findLT (fromGt + 1)
 
 -- | Basically @findIndex (not . isTagName)@, but doesn't allocate.
 findEndOfTagName :: ByteString -> Int -> Int
