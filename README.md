@@ -10,7 +10,8 @@ Current implementation:
 
 * It currently doesn't return a result.
 * It does not process attributes yet.
-* It walks across a string looking for tags, non-hierarchically.
+* It walks across a string looking for tags, non-hierarchically
+  (i.e. doesn't check closing tags).
 * It handles comments.
 * It currently is faster than Hexml, and does not allocate linearly
   for the size of the input. In other words, it runs in constant or
