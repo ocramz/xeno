@@ -26,16 +26,20 @@ parse str = findGt 0
         Nothing -> ()
         Just fromLt -> checkOpenComment (fromLt + 1)
     checkOpenComment index =
-      if S.isPrefixOf "!--" (S.drop index str)
-         then findCommentEnd (index + 3)
-         else findLt index
+      if S.index this 0 == bangChar &&
+         S.index this 1 == commentChar &&
+         S.index this 2 == commentChar
+        then findCommentEnd (index + 3)
+        else findLt index
+      where
+        this = S.drop index str
     findCommentEnd index =
       case elemIndexFrom commentChar str index of
         Nothing -> error "Couldn't find comment closing '-->' characters."
         Just fromDash ->
           if S.isPrefixOf "->" (S.drop (fromDash + 1) str)
-             then findGt (fromDash + 2)
-             else findCommentEnd (fromDash + 1)
+            then findGt (fromDash + 2)
+            else findCommentEnd (fromDash + 1)
     findLt index =
       case elemIndexFrom closeTagChar str index of
         Nothing -> error "Couldn't find matching '>' character."
@@ -49,6 +53,10 @@ elemIndexFrom c str offset = fmap (+ offset) (S.elemIndex c (S.drop offset str))
 -- has linear allocation. See git commit with this comment for
 -- results.
 {-# INLINE elemIndexFrom #-}
+
+-- | Exclaimation character !.
+bangChar :: Word8
+bangChar = 33
 
 -- | Open tag character.
 commentChar :: Word8
