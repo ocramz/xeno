@@ -40,18 +40,17 @@ closeTagChar = 62 -- '>'
 
 -- | Naive version with ByteString.
 parse :: ByteString -> ()
-parse str =
-  parseTags 0
+parse str = findGt 0
   where
-    parseTags index =
+    findGt index =
       case elemIndexFrom openTagChar str index of
-        Nothing ->
-          ()
-        Just fromLt ->
-          case elemIndexFrom closeTagChar str fromLt of
-            Nothing -> ()
-            Just fromGt -> do
-              parseTags (fromGt + 1)
+        Nothing -> ()
+        Just fromLt -> findLt fromLt
+    findLt index =
+      case elemIndexFrom closeTagChar str index of
+        Nothing -> ()
+        Just fromGt -> do
+          findGt (fromGt + 1)
 
 -- | ErikD's contribution.
 parseErikd :: ByteString -> ()
