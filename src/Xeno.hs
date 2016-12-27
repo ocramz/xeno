@@ -34,6 +34,9 @@ parse str = findGt 0
 -- | Get index of an element starting from offset.
 elemIndexFrom :: Word8 -> ByteString -> Int -> Maybe Int
 elemIndexFrom c str offset = fmap (+ offset) (S.elemIndex c (S.drop offset str))
+-- Without the INLINE below, the whole function is twice as slow and
+-- has linear allocation. See git commit with this comment for
+-- results.
 {-# INLINE elemIndexFrom #-}
 
 -- | Open tag character.
