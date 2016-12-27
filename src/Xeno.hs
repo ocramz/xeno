@@ -36,11 +36,7 @@ parse str = findLT 0
       case elemIndexFrom commentChar str index of
         Nothing -> error "Couldn't find comment closing '-->' characters."
         Just fromDash ->
-          if (S.index this 0 == commentChar)
-             -- We could validate the dashes here, but we're a liberal
-             -- parser, not a validating parser.
-              &&
-             (S.index this 1 == closeTagChar)
+          if S.index this 0 == commentChar && S.index this 1 == closeTagChar
             then findLT (fromDash + 2)
             else findCommentEnd (fromDash + 1)
           where this = S.drop index str
@@ -50,7 +46,8 @@ parse str = findLT 0
            then findLT spaceOrCloseTag
            else if S.index str spaceOrCloseTag == spaceChar
                   then case elemIndexFrom closeTagChar str spaceOrCloseTag of
-                         Nothing -> error "Couldn't find matching '>' character."
+                         Nothing ->
+                           error "Couldn't find matching '>' character."
                          Just fromGt -> do
                            findLT (fromGt + 1)
                   else error "Expecting space or closing '>' after tag name."
