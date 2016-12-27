@@ -26,29 +26,29 @@ main =
              "4KB"
              [ bench "hexml" (whnf Hexml.parse input)
              , bench "xeno" (whnf Xeno.parse input)
-             -- , bench "xeno-erikd" (whnf Xeno.parseErikd input)
-             , bench "xml" (nf XML.parseXMLDoc input)
-             ])
-    ,  env
-         (S.readFile "data/fabricated-211kb.xml")
-         (\input ->
-            bgroup
-              "211KB"
-              [ bench "hexml" (whnf Hexml.parse input)
-              , bench "xeno" (whnf Xeno.parse input)
-              -- , bench "xeno-erikd" (whnf Xeno.parseErikd input)
-              , bench "xml" (nf XML.parseXMLDoc input)
-              ])
-    ,   env
-          (S.readFile "data/text-31kb.xml")
-          (\input ->
-             bgroup
-               "31KB"
-               [ bench "hexml" (whnf Hexml.parse input)
-               , bench "xeno" (whnf Xeno.parse input)
                -- , bench "xeno-erikd" (whnf Xeno.parseErikd input)
-               , bench "xml" (nf XML.parseXMLDoc input)
-               ])
+               -- , bench "xml" (nf XML.parseXMLDoc input)
+             ])
+        , env
+        (S.readFile "data/text-31kb.xml")
+        (\input ->
+           bgroup
+             "31KB"
+             [ bench "hexml" (whnf Hexml.parse input)
+             , bench "xeno" (whnf Xeno.parse input)
+               -- , bench "xeno-erikd" (whnf Xeno.parseErikd input)
+               -- , bench "xml" (nf XML.parseXMLDoc input)
+             ])
+    , env
+        (S.readFile "data/fabricated-211kb.xml")
+        (\input ->
+           bgroup
+             "211KB"
+             [ bench "hexml" (whnf Hexml.parse input)
+             , bench "xeno" (whnf Xeno.parse input)
+               -- , bench "xeno-erikd" (whnf Xeno.parseErikd input)
+               -- , bench "xml" (nf XML.parseXMLDoc input)
+             ])
     ]
 
 deriving instance Generic Content
