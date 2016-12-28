@@ -6,20 +6,74 @@
 -- | Test XML parser.
 
 module Xeno
-  ( parse
+  ( process
+  , fold
+  , validate
+  , dump
   ) where
 
+import           Control.Monad.State.Strict
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
+import qualified Data.ByteString.Char8 as S8
+import           Data.Functor.Identity
+import           Data.Monoid
 import           Data.Word
 
--- | Naive version with ByteString.
-parse :: ByteString -> ()
-parse str = findLT 0
+--------------------------------------------------------------------------------
+-- Helpful interfaces to the parser
+
+-- | Parse the XML but return no result, process no events.
+validate :: ByteString -> ()
+validate = runIdentity . process (\_ -> pure ()) (\_ -> pure ())
+
+-- | Parse the XML and pretty print it to stdout.
+dump :: ByteString -> IO ()
+dump str =
+  evalStateT
+    (process
+       (\name -> do
+          level <- get
+          let !level' = level + 2
+          put level'
+          lift (S8.putStrLn (S8.replicate level ' ' <> "<" <> name <> ">")))
+       (\name -> do
+          level <- get
+          let !level' = level - 2
+          put level'
+          lift (S8.putStrLn (S8.replicate level' ' ' <> "</" <> name <> ">")))
+       str)
+    (0 :: Int)
+
+-- | Fold over the XML input.
+fold
+  :: (s -> ByteString -> s) -- ^ Open tag.
+  -> (s -> ByteString -> s) -- ^ Close tag.
+  -> s
+  -> ByteString
+  -> s
+fold openF closeF s str =
+  execState
+    (process
+       (\name -> modify (\s -> openF s name))
+       (\name -> modify (\s -> closeF s name))
+       str)
+    s
+
+--------------------------------------------------------------------------------
+-- Main parsing function
+
+-- | Process events with callbacks in the XML input.
+process
+  :: Monad m
+  => (ByteString -> m ()) -- ^ Open tag.
+  -> (ByteString -> m ()) -- ^ Close tag.
+  -> ByteString -> m ()
+process openF closeF str = findLT 0
   where
     findLT index =
       case elemIndexFrom openTagChar str index of
-        Nothing -> ()
+        Nothing -> pure ()
         Just fromLt -> checkOpenComment (fromLt + 1)
     checkOpenComment index =
       if S.index this 0 == bangChar &&
@@ -39,12 +93,27 @@ parse str = findLT 0
     findTagName index0 =
       let spaceOrCloseTag = findEndOfTagName str index
       in if S.index str spaceOrCloseTag == closeTagChar
-           then findLT spaceOrCloseTag
+           then do
+             let tagname = substring str index spaceOrCloseTag
+             _ <-
+               if S.index str index0 == questionChar
+                 then return ()
+                 else if S.index str index0 == slashChar
+                        then closeF tagname
+                        else openF tagname
+             findLT spaceOrCloseTag
            else if S.index str spaceOrCloseTag == spaceChar
                   then case elemIndexFrom closeTagChar str spaceOrCloseTag of
                          Nothing ->
                            error "Couldn't find matching '>' character."
                          Just fromGt -> do
+                           let tagname = substring str index spaceOrCloseTag
+                           _ <-
+                             if S.index str index0 == questionChar
+                               then return ()
+                               else if S.index str index0 == slashChar
+                                      then closeF tagname
+                                      else openF tagname
                            findLT (fromGt + 1)
                   else error "Expecting space or closing '>' after tag name."
       where
@@ -53,6 +122,23 @@ parse str = findLT 0
              S.index str index0 == slashChar
             then index0 + 1
             else index0
+{-# INLINE process #-}
+{-# SPECIALISE process ::
+                 (ByteString -> Identity ()) ->
+                   (ByteString -> Identity ()) -> ByteString -> Identity ()
+               #-}
+{-# SPECIALISE process ::
+                 (ByteString -> IO ()) ->
+                   (ByteString -> IO ()) -> ByteString -> IO ()
+               #-}
+
+--------------------------------------------------------------------------------
+-- ByteString utilities
+
+-- | Get a substring of a string.
+substring :: ByteString -> Int -> Int -> ByteString
+substring s start end = S.take (end - start) (S.drop start s)
+{-# INLINE substring #-}
 
 -- | Basically @findIndex (not . isTagName)@, but doesn't allocate.
 findEndOfTagName :: ByteString -> Int -> Int
@@ -62,11 +148,6 @@ findEndOfTagName str index =
      else findEndOfTagName str (index + 1)
 {-# INLINE findEndOfTagName #-}
 
--- | Is the character a valid tag name constituent?
-isTagName :: Word8 -> Bool
-isTagName c = (c >= 97 && c <= 122) || (c >= 65 && c <= 90) || c == 95
-{-# INLINE isTagName #-}
-
 -- | Get index of an element starting from offset.
 elemIndexFrom :: Word8 -> ByteString -> Int -> Maybe Int
 elemIndexFrom c str offset = fmap (+ offset) (S.elemIndex c (S.drop offset str))
@@ -74,6 +155,14 @@ elemIndexFrom c str offset = fmap (+ offset) (S.elemIndex c (S.drop offset str))
 -- has linear allocation. See git commit with this comment for
 -- results.
 {-# INLINE elemIndexFrom #-}
+
+--------------------------------------------------------------------------------
+-- Character types
+
+-- | Is the character a valid tag name constituent?
+isTagName :: Word8 -> Bool
+isTagName c = (c >= 97 && c <= 122) || (c >= 65 && c <= 90) || c == 95
+{-# INLINE isTagName #-}
 
 -- | Char for '?'.
 questionChar :: Word8
