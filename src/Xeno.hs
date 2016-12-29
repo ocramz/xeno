@@ -110,12 +110,11 @@ process openF textF closeF str = findLT 0
       in if S.index str spaceOrCloseTag == closeTagChar
            then do
              let tagname = substring str index spaceOrCloseTag
-             _ <-
-               if S.index str index0 == questionChar
-                 then return ()
-                 else if S.index str index0 == slashChar
-                        then closeF tagname
-                        else openF tagname
+             if S.index str index0 == questionChar
+               then return ()
+               else if S.index str index0 == slashChar
+                      then closeF tagname
+                      else openF tagname
              findLT (spaceOrCloseTag + 1)
            else if S.index str spaceOrCloseTag == spaceChar
                   then case elemIndexFrom closeTagChar str spaceOrCloseTag of
@@ -123,12 +122,11 @@ process openF textF closeF str = findLT 0
                            error "Couldn't find matching '>' character."
                          Just fromGt -> do
                            let tagname = substring str index spaceOrCloseTag
-                           _ <-
-                             if S.index str index0 == questionChar
-                               then return ()
-                               else if S.index str index0 == slashChar
-                                      then closeF tagname
-                                      else openF tagname
+                           if S.index str index0 == questionChar
+                             then return ()
+                             else if S.index str index0 == slashChar
+                                    then closeF tagname
+                                    else openF tagname
                            findLT (fromGt + 1)
                   else error "Expecting space or closing '>' after tag name."
       where
