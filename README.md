@@ -2,6 +2,16 @@
 
 A fast event-based XML parser.
 
+## Features
+
+* It's a SAX-style/fold parser which triggers events for open/close
+  tags, text, etc.
+* It does not process attributes yet.
+* It handles comments.
+* It runs in constant or practically constant space (see the memory
+  benchmarks below).
+* It currently is faster than Hexml.
+
 ## Example
 
 Quickly dumping XML:
@@ -43,16 +53,6 @@ Most general XML processor:
 "i"
 "z"
 ```
-
-## Features
-
-* It's a SAX-style/fold parser which triggers events for open/close
-  tags, text, etc.
-* It does not process attributes yet.
-* It handles comments.
-* It runs in constant or practically constant space (see the memory
-  benchmarks below).
-* It currently is faster than Hexml.
 
 ## Performance goals
 
