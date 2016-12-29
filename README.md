@@ -34,7 +34,7 @@ Quickly dumping XML:
 Folding over XML:
 
 ``` haskell
-> fold (\m _ -> m+1) const 0 input
+> fold (\m _ -> m + 1) const 0 input
 5
 ```
 
