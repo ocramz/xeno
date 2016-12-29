@@ -19,29 +19,37 @@ Quickly dumping XML:
 ``` haskell
 > let input = "Before<x k=''>You<y>Hello, <strong>Xeno!</strong></y>go</x>Try <z><i>this!</i></z>"
 > dump
+"Before... "
 <x>
+  "You..."
   <y>
+    "Hello, "
     <strong>
+      "Xeno!"
     </strong>
   </y>
+  " go..."
 </x>
+"Try "
 <z>
   <i>
+    "this!"
   </i>
 </z>
+" Woo!"
 ```
 
 Folding over XML:
 
 ``` haskell
-> fold (\m _ -> m + 1) const 0 input
+> fold (\m _ -> m + 1) const const 0 input
 5
 ```
 
 Most general XML processor:
 
 ``` haskell
-> process print print input
+> process print (const (return ())) print
 "x"
 "y"
 "strong"
@@ -62,50 +70,50 @@ beat or match roughly.
 
 Memory benchmarks for Xeno:
 
-    Case        Bytes  GCs  Check
-    4kb parse   1,160    0  OK
-    42kb parse  1,160    0  OK
-    52kb parse  1,160    0  OK
+    Case           Bytes  GCs  Check
+    4kb validate   1,224    0  OK
+    42kb validate  1,536    0  OK
+    52kb validate  1,536    0  OK
 
 Speed benchmarks:
 
     benchmarking 4KB/hexml
-    time                 6.190 μs   (6.159 μs .. 6.230 μs)
-                         1.000 R²   (1.000 R² .. 1.000 R²)
-    mean                 6.216 μs   (6.195 μs .. 6.257 μs)
-    std dev              94.07 ns   (83.83 ns .. 105.7 ns)
-    variance introduced by outliers: 13% (moderately inflated)
+    time                 6.121 μs   (6.106 μs .. 6.143 μs)
+                         1.000 R²   (0.999 R² .. 1.000 R²)
+    mean                 6.191 μs   (6.147 μs .. 6.387 μs)
+    std dev              241.3 ns   (82.38 ns .. 561.7 ns)
+    variance introduced by outliers: 50% (moderately inflated)
 
     benchmarking 4KB/xeno
-    time                 4.215 μs   (4.175 μs .. 4.247 μs)
+    time                 4.670 μs   (4.610 μs .. 4.732 μs)
                          0.999 R²   (0.998 R² .. 0.999 R²)
-    mean                 4.246 μs   (4.189 μs .. 4.311 μs)
-    std dev              224.9 ns   (164.1 ns .. 289.2 ns)
-    variance introduced by outliers: 66% (severely inflated)
-
-    benchmarking 31KB/hexml
-    time                 9.519 μs   (9.252 μs .. 9.795 μs)
-                         0.995 R²   (0.992 R² .. 0.998 R²)
-    mean                 9.643 μs   (9.436 μs .. 9.882 μs)
-    std dev              735.3 ns   (541.3 ns .. 905.4 ns)
-    variance introduced by outliers: 78% (severely inflated)
-
-    benchmarking 31KB/xeno
-    time                 2.440 μs   (2.415 μs .. 2.463 μs)
-                         0.999 R²   (0.999 R² .. 0.999 R²)
-    mean                 2.439 μs   (2.416 μs .. 2.473 μs)
-    std dev              96.87 ns   (79.85 ns .. 118.0 ns)
+    mean                 4.683 μs   (4.630 μs .. 4.743 μs)
+    std dev              194.5 ns   (161.3 ns .. 237.1 ns)
     variance introduced by outliers: 53% (severely inflated)
 
+    benchmarking 31KB/hexml
+    time                 9.968 μs   (9.713 μs .. 10.24 μs)
+                         0.994 R²   (0.991 R² .. 0.997 R²)
+    mean                 10.12 μs   (9.824 μs .. 10.38 μs)
+    std dev              887.5 ns   (712.6 ns .. 1.062 μs)
+    variance introduced by outliers: 83% (severely inflated)
+
+    benchmarking 31KB/xeno
+    time                 2.728 μs   (2.693 μs .. 2.759 μs)
+                         0.999 R²   (0.998 R² .. 0.999 R²)
+    mean                 2.720 μs   (2.687 μs .. 2.756 μs)
+    std dev              110.3 ns   (89.33 ns .. 133.6 ns)
+    variance introduced by outliers: 54% (severely inflated)
+
     benchmarking 211KB/hexml
-    time                 258.6 μs   (258.1 μs .. 259.1 μs)
+    time                 256.2 μs   (255.9 μs .. 256.5 μs)
                          1.000 R²   (1.000 R² .. 1.000 R²)
-    mean                 258.3 μs   (258.1 μs .. 258.5 μs)
-    std dev              712.5 ns   (564.2 ns .. 873.5 ns)
+    mean                 256.0 μs   (255.7 μs .. 256.3 μs)
+    std dev              861.9 ns   (699.5 ns .. 1.062 μs)
 
     benchmarking 211KB/xeno
-    time                 200.9 μs   (199.0 μs .. 202.7 μs)
-                         0.999 R²   (0.999 R² .. 0.999 R²)
-    mean                 201.0 μs   (199.3 μs .. 203.7 μs)
-    std dev              7.278 μs   (5.819 μs .. 10.53 μs)
-    variance introduced by outliers: 34% (moderately inflated)
+    time                 209.6 μs   (206.5 μs .. 213.1 μs)
+                         0.998 R²   (0.997 R² .. 0.999 R²)
+    mean                 208.6 μs   (206.3 μs .. 210.9 μs)
+    std dev              7.096 μs   (6.141 μs .. 8.274 μs)
+    variance introduced by outliers: 30% (moderately inflated)

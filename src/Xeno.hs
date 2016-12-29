@@ -25,7 +25,7 @@ import           Data.Word
 
 -- | Parse the XML but return no result, process no events.
 validate :: ByteString -> ()
-validate = runIdentity . process (\_ -> pure ()) (\_ -> pure ())
+validate = runIdentity . process (\_ -> pure ()) (\_ -> pure ()) (\_ -> pure ())
 
 -- | Parse the XML and pretty print it to stdout.
 dump :: ByteString -> IO ()
@@ -37,6 +37,9 @@ dump str =
           let !level' = level + 2
           put level'
           lift (S8.putStrLn (S8.replicate level ' ' <> "<" <> name <> ">")))
+       (\text -> do
+          level <- get
+          lift (S8.putStrLn (S8.replicate level ' ' <> S8.pack (show text))))
        (\name -> do
           level <- get
           let !level' = level - 2
@@ -48,15 +51,17 @@ dump str =
 -- | Fold over the XML input.
 fold
   :: (s -> ByteString -> s) -- ^ Open tag.
+  -> (s -> ByteString -> s) -- ^ Text.
   -> (s -> ByteString -> s) -- ^ Close tag.
   -> s
   -> ByteString
   -> s
-fold openF closeF s str =
+fold openF textF closeF s str =
   execState
     (process
-       (\name -> modify (\s -> openF s name))
-       (\name -> modify (\s -> closeF s name))
+       (\name -> modify (\s' -> openF s' name))
+       (\text -> modify (\s' -> textF s' text))
+       (\name -> modify (\s' -> closeF s' name))
        str)
     s
 
@@ -67,14 +72,24 @@ fold openF closeF s str =
 process
   :: Monad m
   => (ByteString -> m ()) -- ^ Open tag.
+  -> (ByteString -> m ()) -- ^ Text.
   -> (ByteString -> m ()) -- ^ Close tag.
   -> ByteString -> m ()
-process openF closeF str = findLT 0
+process openF textF closeF str = findLT 0
   where
     findLT index =
       case elemIndexFrom openTagChar str index of
-        Nothing -> pure ()
-        Just fromLt -> checkOpenComment (fromLt + 1)
+        Nothing ->
+          if S.null text
+            then pure ()
+            else textF text
+          where text = S.drop index str
+        Just fromLt -> do
+          if S.null text
+            then pure ()
+            else textF text
+          checkOpenComment (fromLt + 1)
+          where text = substring str index fromLt
     checkOpenComment index =
       if S.index this 0 == bangChar &&
          S.index this 1 == commentChar && S.index this 2 == commentChar
@@ -101,7 +116,7 @@ process openF closeF str = findLT 0
                  else if S.index str index0 == slashChar
                         then closeF tagname
                         else openF tagname
-             findLT spaceOrCloseTag
+             findLT (spaceOrCloseTag + 1)
            else if S.index str spaceOrCloseTag == spaceChar
                   then case elemIndexFrom closeTagChar str spaceOrCloseTag of
                          Nothing ->
@@ -125,11 +140,13 @@ process openF closeF str = findLT 0
 {-# INLINE process #-}
 {-# SPECIALISE process ::
                  (ByteString -> Identity ()) ->
-                   (ByteString -> Identity ()) -> ByteString -> Identity ()
+                   (ByteString -> Identity ()) ->
+                     (ByteString -> Identity ()) -> ByteString -> Identity ()
                #-}
 {-# SPECIALISE process ::
                  (ByteString -> IO ()) ->
-                   (ByteString -> IO ()) -> ByteString -> IO ()
+                   (ByteString -> IO ()) ->
+                     (ByteString -> IO ()) -> ByteString -> IO ()
                #-}
 
 --------------------------------------------------------------------------------
