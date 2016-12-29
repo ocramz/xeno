@@ -1,21 +1,52 @@
 # xeno
 
-A WIP XML parser in pure Haskell.
+A fast event-based XML parser.
 
-The [hexml](https://github.com/ndmitchell/hexml) Haskell library uses
-an XML parser written in C, so that is the baseline we're trying to
-beat or match roughly.
+## Example
 
-Current implementation:
+``` haskell
+> let input = "Before<x k=''>You<y>Hello, <strong>Xeno!</strong></y>go</x>Try <z><i>this!</i></z>"
+> dump
+<x>
+  <y>
+    <strong>
+    </strong>
+  </y>
+</x>
+<z>
+  <i>
+  </i>
+</z>
+> fold (\m _ -> m+1) const 0 input
+5
+> process print print input
+"x"
+"y"
+"strong"
+"strong"
+"y"
+"x"
+"z"
+"i"
+"i"
+"z"
+```
 
-* It currently doesn't return a result.
+## Features
+
+* It's a SAX-style/fold parser which triggers events for open/close
+  tags, text, etc.
 * It does not process attributes yet.
-* It walks across a string looking for tags, non-hierarchically
-  (i.e. doesn't check closing tags).
 * It handles comments.
 * It runs in constant or practically constant space (see the memory
   benchmarks below).
 * It currently is faster than Hexml.
+
+## Performance goals
+
+The [hexml](https://github.com/ndmitchell/hexml) Haskell library uses
+an XML parser written in C, so that is the baseline we're trying to
+beat or match roughly.
 
 Memory benchmarks for Xeno:
 
