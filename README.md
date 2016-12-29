@@ -4,9 +4,11 @@ A fast event-based XML parser.
 
 ## Example
 
+Quickly dumping XML:
+
 ``` haskell
-> let input = "Before<x k=''>You<y>Hello, <strong>Xeno!</strong></y>go</x>Try <z><i>this!</i></z>"
-> dump
+> let input = "Before<x k=''>You<y>Hello, <strong>Xeno!</strong></y>go</x>Try <z><i>this!</i></z>"
+> dump
 <x>
   <y>
     <strong>
@@ -17,9 +19,19 @@ A fast event-based XML parser.
   <i>
   </i>
 </z>
-> fold (\m _ -> m+1) const 0 input
+```
+
+Folding over XML:
+
+``` haskell
+> fold (\m _ -> m+1) const 0 input
 5
-> process print print input
+```
+
+Most general XML processor:
+
+``` haskell
+> process print print input
 "x"
 "y"
 "strong"
