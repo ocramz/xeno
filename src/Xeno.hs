@@ -26,7 +26,14 @@ import           Data.Word
 
 -- | Parse the XML but return no result, process no events.
 validate :: ByteString -> ()
-validate = runIdentity . process (\_ -> pure ()) (\_ -> pure ()) (\_ -> pure ())
+validate =
+  runIdentity .
+  process
+    (\_ -> pure ())
+    (\_ _ -> pure ())
+    (\_ -> pure ())
+    (\_ -> pure ())
+    (\_ -> pure ())
 
 -- | Parse the XML and pretty print it to stdout.
 dump :: ByteString -> IO ()
@@ -35,9 +42,13 @@ dump str =
     (process
        (\name -> do
           level <- get
+          lift (S8.putStr (S8.replicate level ' ' <> "<" <> name <> "")))
+       (\key value -> lift (S8.putStr (" " <> key <> "=\"" <> value <> "\"")))
+       (\_ -> do
+          level <- get
           let !level' = level + 2
           put level'
-          lift (S8.putStrLn (S8.replicate level ' ' <> "<" <> name <> ">")))
+          lift (S8.putStrLn (">")))
        (\text -> do
           level <- get
           lift (S8.putStrLn (S8.replicate level ' ' <> S8.pack (show text))))
@@ -52,15 +63,19 @@ dump str =
 -- | Fold over the XML input.
 fold
   :: (s -> ByteString -> s) -- ^ Open tag.
+  -> (s -> ByteString -> ByteString -> s) -- ^ Attribute key/value.
+  -> (s -> ByteString -> s) -- ^ End of open tag.
   -> (s -> ByteString -> s) -- ^ Text.
   -> (s -> ByteString -> s) -- ^ Close tag.
   -> s
   -> ByteString
   -> s
-fold openF textF closeF s str =
+fold openF attrF endOpenF textF closeF s str =
   execState
     (process
        (\name -> modify (\s' -> openF s' name))
+       (\key value -> modify (\s' -> attrF s' key value))
+       (\name -> modify (\s' -> endOpenF s' name))
        (\text -> modify (\s' -> textF s' text))
        (\name -> modify (\s' -> closeF s' name))
        str)
@@ -73,10 +88,12 @@ fold openF textF closeF s str =
 process
   :: Monad m
   => (ByteString -> m ()) -- ^ Open tag.
+  -> (ByteString -> ByteString -> m ()) -- ^ Tag attribute.
+  -> (ByteString -> m ()) -- ^ End open tag.
   -> (ByteString -> m ()) -- ^ Text.
   -> (ByteString -> m ()) -- ^ Close tag.
   -> ByteString -> m ()
-process openF textF closeF str = findLT 0
+process openF attrF endOpenF textF closeF str = findLT 0
   where
     findLT index =
       case elemIndexFrom openTagChar str index of
@@ -107,18 +124,21 @@ process openF textF closeF str = findLT 0
               case elemIndexFrom closeTagChar str spaceOrCloseTag of
                 Nothing -> error "Couldn't find matching '>' character."
                 Just fromGt -> do
+                  endOpenF (substring str index (spaceOrCloseTag - 1))
                   findLT (fromGt + 1)
             | S.index str spaceOrCloseTag == closeTagChar ->
               do let tagname = substring str index spaceOrCloseTag
                  if S.index str index0 == slashChar
                    then closeF tagname
-                   else openF tagname
+                   else do openF tagname
+                           endOpenF tagname
                  findLT (spaceOrCloseTag + 1)
             | otherwise ->
-              let closingTag = findAttributes (spaceOrCloseTag + 1)
-              in do let tagname = substring str index spaceOrCloseTag
-                    openF tagname
-                    findLT (closingTag + 1)
+              do let tagname = substring str index spaceOrCloseTag
+                 openF tagname
+                 closingTag <- findAttributes (spaceOrCloseTag + 1)
+                 endOpenF tagname
+                 findLT (closingTag + 1)
       where
         index =
           if S.index str index0 == slashChar
@@ -126,7 +146,7 @@ process openF textF closeF str = findLT 0
             else index0
     findAttributes index0 =
       if S.index str index == closeTagChar
-        then index
+        then pure index
         else let afterAttrName = parseName str index
              in if S.index str afterAttrName == equalChar
                   then let quoteIndex = afterAttrName + 1
@@ -141,7 +161,9 @@ process openF textF closeF str = findLT 0
                                      error
                                        "Expecting matching ' or \" to close attribute value."
                                    Just endQuoteIndex ->
-                                     findAttributes (endQuoteIndex + 1)
+                                     do attrF (substring str index afterAttrName)
+                                              (substring str (quoteIndex+1) (endQuoteIndex))
+                                        findAttributes (endQuoteIndex + 1)
                             else error
                                    "Expecting ' or \" for attribute value, after '='."
                   else error "Expecting '=' after attribute name."
@@ -150,13 +172,17 @@ process openF textF closeF str = findLT 0
 {-# INLINE process #-}
 {-# SPECIALISE process ::
                  (ByteString -> Identity ()) ->
-                   (ByteString -> Identity ()) ->
-                     (ByteString -> Identity ()) -> ByteString -> Identity ()
+                   (ByteString -> ByteString -> Identity ()) ->
+                     (ByteString -> Identity ()) ->
+                       (ByteString -> Identity ()) ->
+                         (ByteString -> Identity ()) -> ByteString -> Identity ()
                #-}
 {-# SPECIALISE process ::
                  (ByteString -> IO ()) ->
-                   (ByteString -> IO ()) ->
-                     (ByteString -> IO ()) -> ByteString -> IO ()
+                   (ByteString -> ByteString -> IO ()) ->
+                     (ByteString -> IO ()) ->
+                       (ByteString -> IO ()) ->
+                         (ByteString -> IO ()) -> ByteString -> IO ()
                #-}
 
 --------------------------------------------------------------------------------
