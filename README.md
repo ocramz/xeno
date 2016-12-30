@@ -52,8 +52,29 @@ process
   -> (ByteString -> m ())               -- ^ End open tag.
   -> (ByteString -> m ())               -- ^ Text.
   -> (ByteString -> m ())               -- ^ Close tag.
-  -> ByteString -> m ()
+  -> ByteString                         -- ^ Input string.
+  -> m ()
 ```
+
+You can use any monad you want. IO, State, etc. For example, `fold` is
+implemented like this:
+
+``` haskell
+fold openF attrF endOpenF textF closeF s str =
+  execState
+    (process
+       (\name -> modify (\s' -> openF s' name))
+       (\key value -> modify (\s' -> attrF s' key value))
+       (\name -> modify (\s' -> endOpenF s' name))
+       (\text -> modify (\s' -> textF s' text))
+       (\name -> modify (\s' -> closeF s' name))
+       str)
+    s
+```
+
+The `process` is marked as INLINE, which means use-sites of it will
+inline, and your particular monad's type will be potentially erased
+for great performance.
 
 ## Performance goals
 
