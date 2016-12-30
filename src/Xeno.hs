@@ -117,9 +117,7 @@ process openF textF closeF str = findLT 0
             | otherwise ->
               let closingTag = findAttributes (spaceOrCloseTag + 1)
               in do let tagname = substring str index spaceOrCloseTag
-                    if S.index str index0 == slashChar
-                      then closeF tagname
-                      else openF tagname
+                    openF tagname
                     findLT (closingTag + 1)
       where
         index =
