@@ -8,6 +8,8 @@ A fast event-based XML parser.
   tags, attributes, text, etc.
 * It handles comments.
 * It uses very low memory (see memory benchmarks below).
+* It's very fast (see speed benchmarks below).
+* It's written in pure Haskell.
 
 ## Example
 
