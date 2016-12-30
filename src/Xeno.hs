@@ -102,7 +102,7 @@ process openF textF closeF str = findLT 0
             else findCommentEnd (fromDash + 1)
           where this = S.drop index str
     findTagName index0 =
-      let spaceOrCloseTag = findEndOfTagName str index
+      let spaceOrCloseTag = parseName str index
       in if | S.index str spaceOrCloseTag == closeTagChar ->
               do let tagname = substring str index spaceOrCloseTag
                  unless
@@ -150,13 +150,13 @@ substring :: ByteString -> Int -> Int -> ByteString
 substring s start end = S.take (end - start) (S.drop start s)
 {-# INLINE substring #-}
 
--- | Basically @findIndex (not . isTagName)@, but doesn't allocate.
-findEndOfTagName :: ByteString -> Int -> Int
-findEndOfTagName str index =
-  if not (isTagName (S.index str index))
+-- | Basically @findIndex (not . isNameChar)@, but doesn't allocate.
+parseName :: ByteString -> Int -> Int
+parseName str index =
+  if not (isNameChar (S.index str index))
      then index
-     else findEndOfTagName str (index + 1)
-{-# INLINE findEndOfTagName #-}
+     else parseName str (index + 1)
+{-# INLINE parseName #-}
 
 -- | Get index of an element starting from offset.
 elemIndexFrom :: Word8 -> ByteString -> Int -> Maybe Int
@@ -170,9 +170,9 @@ elemIndexFrom c str offset = fmap (+ offset) (S.elemIndex c (S.drop offset str))
 -- Character types
 
 -- | Is the character a valid tag name constituent?
-isTagName :: Word8 -> Bool
-isTagName c = (c >= 97 && c <= 122) || (c >= 65 && c <= 90) || c == 95
-{-# INLINE isTagName #-}
+isNameChar :: Word8 -> Bool
+isNameChar c = (c >= 97 && c <= 122) || (c >= 65 && c <= 90) || c == 95
+{-# INLINE isNameChar #-}
 
 -- | Char for '?'.
 questionChar :: Word8
