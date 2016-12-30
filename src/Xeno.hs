@@ -103,33 +103,52 @@ process openF textF closeF str = findLT 0
           where this = S.drop index str
     findTagName index0 =
       let spaceOrCloseTag = parseName str index
-      in if | S.index str spaceOrCloseTag == closeTagChar ->
-              do let tagname = substring str index spaceOrCloseTag
-                 unless
-                   (S.index str index0 == questionChar)
-                   (if S.index str index0 == slashChar
-                      then closeF tagname
-                      else openF tagname)
-                 findLT (spaceOrCloseTag + 1)
-            | S.index str spaceOrCloseTag == spaceChar ->
+      in if | S.index str index0 == questionChar ->
               case elemIndexFrom closeTagChar str spaceOrCloseTag of
                 Nothing -> error "Couldn't find matching '>' character."
                 Just fromGt -> do
-                  let tagname = substring str index spaceOrCloseTag
-                  unless
-                    (S.index str index0 == questionChar)
-                    (if S.index str index0 == slashChar
-                       then closeF tagname
-                       else openF tagname)
                   findLT (fromGt + 1)
+            | S.index str spaceOrCloseTag == closeTagChar ->
+              do let tagname = substring str index spaceOrCloseTag
+                 if S.index str index0 == slashChar
+                   then closeF tagname
+                   else openF tagname
+                 findLT (spaceOrCloseTag + 1)
             | otherwise ->
-              error "Expecting space or closing '>' after tag name."
+              let closingTag = findAttributes (spaceOrCloseTag + 1)
+              in do let tagname = substring str index spaceOrCloseTag
+                    if S.index str index0 == slashChar
+                      then closeF tagname
+                      else openF tagname
+                    findLT (closingTag + 1)
       where
         index =
-          if S.index str index0 == questionChar ||
-             S.index str index0 == slashChar
+          if S.index str index0 == slashChar
             then index0 + 1
             else index0
+    findAttributes index0 =
+      if S.index str index == closeTagChar
+        then index
+        else let afterAttrName = parseName str index
+             in if S.index str afterAttrName == equalChar
+                  then let quoteIndex = afterAttrName + 1
+                           usedChar = S.index str quoteIndex
+                       in if usedChar == quoteChar ||
+                             usedChar == doubleQuoteChar
+                            then case elemIndexFrom
+                                        usedChar
+                                        str
+                                        (quoteIndex + 1) of
+                                   Nothing ->
+                                     error
+                                       "Expecting matching ' or \" to close attribute value."
+                                   Just endQuoteIndex ->
+                                     findAttributes (endQuoteIndex + 1)
+                            else error
+                                   "Expecting ' or \" for attribute value, after '='."
+                  else error "Expecting '=' after attribute name."
+      where
+        index = skipSpaces str index0
 {-# INLINE process #-}
 {-# SPECIALISE process ::
                  (ByteString -> Identity ()) ->
@@ -144,6 +163,14 @@ process openF textF closeF str = findLT 0
 
 --------------------------------------------------------------------------------
 -- ByteString utilities
+
+-- | A fast space skipping function.
+skipSpaces :: ByteString -> Int -> Int
+skipSpaces str i =
+  if isSpaceChar (S.index str i)
+    then skipSpaces str (i + 1)
+    else i
+{-# INLINE skipSpaces #-}
 
 -- | Get a substring of a string.
 substring :: ByteString -> Int -> Int -> ByteString
@@ -169,10 +196,26 @@ elemIndexFrom c str offset = fmap (+ offset) (S.elemIndex c (S.drop offset str))
 --------------------------------------------------------------------------------
 -- Character types
 
+isSpaceChar :: Word8 -> Bool
+isSpaceChar c = c == 32 || (c <= 10 && c >= 9) || c == 13
+{-# INLINE isSpaceChar #-}
+
 -- | Is the character a valid tag name constituent?
 isNameChar :: Word8 -> Bool
 isNameChar c = (c >= 97 && c <= 122) || (c >= 65 && c <= 90) || c == 95
 {-# INLINE isNameChar #-}
+
+-- | Char for '\''.
+quoteChar :: Word8
+quoteChar = 39
+
+-- | Char for '"'.
+doubleQuoteChar :: Word8
+doubleQuoteChar = 34
+
+-- | Char for '='.
+equalChar :: Word8
+equalChar = 61
 
 -- | Char for '?'.
 questionChar :: Word8
@@ -181,10 +224,6 @@ questionChar = 63
 -- | Char for '/'.
 slashChar :: Word8
 slashChar = 47
-
--- | Character for ' '.
-spaceChar :: Word8
-spaceChar = 32
 
 -- | Exclaimation character !.
 bangChar :: Word8
