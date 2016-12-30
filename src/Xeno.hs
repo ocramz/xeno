@@ -80,15 +80,10 @@ process openF textF closeF str = findLT 0
   where
     findLT index =
       case elemIndexFrom openTagChar str index of
-        Nothing ->
-          if S.null text
-            then pure ()
-            else textF text
+        Nothing -> unless (S.null text) (textF text)
           where text = S.drop index str
         Just fromLt -> do
-          if S.null text
-            then pure ()
-            else textF text
+          unless (S.null text) (textF text)
           checkOpenComment (fromLt + 1)
           where text = substring str index fromLt
     checkOpenComment index =
@@ -110,22 +105,22 @@ process openF textF closeF str = findLT 0
       let spaceOrCloseTag = findEndOfTagName str index
       in if | S.index str spaceOrCloseTag == closeTagChar ->
               do let tagname = substring str index spaceOrCloseTag
-                 if S.index str index0 == questionChar
-                   then return ()
-                   else if S.index str index0 == slashChar
-                          then closeF tagname
-                          else openF tagname
+                 unless
+                   (S.index str index0 == questionChar)
+                   (if S.index str index0 == slashChar
+                      then closeF tagname
+                      else openF tagname)
                  findLT (spaceOrCloseTag + 1)
             | S.index str spaceOrCloseTag == spaceChar ->
               case elemIndexFrom closeTagChar str spaceOrCloseTag of
                 Nothing -> error "Couldn't find matching '>' character."
                 Just fromGt -> do
                   let tagname = substring str index spaceOrCloseTag
-                  if S.index str index0 == questionChar
-                    then return ()
-                    else if S.index str index0 == slashChar
-                           then closeF tagname
-                           else openF tagname
+                  unless
+                    (S.index str index0 == questionChar)
+                    (if S.index str index0 == slashChar
+                       then closeF tagname
+                       else openF tagname)
                   findLT (fromGt + 1)
             | otherwise ->
               error "Expecting space or closing '>' after tag name."
