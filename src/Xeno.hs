@@ -124,49 +124,60 @@ process openF attrF endOpenF textF closeF str = findLT 0
               case elemIndexFrom closeTagChar str spaceOrCloseTag of
                 Nothing -> error "Couldn't find matching '>' character."
                 Just fromGt -> do
-                  endOpenF (substring str index (spaceOrCloseTag - 1))
                   findLT (fromGt + 1)
             | S.index str spaceOrCloseTag == closeTagChar ->
               do let tagname = substring str index spaceOrCloseTag
                  if S.index str index0 == slashChar
                    then closeF tagname
-                   else do openF tagname
-                           endOpenF tagname
+                   else do
+                     openF tagname
+                     endOpenF tagname
                  findLT (spaceOrCloseTag + 1)
             | otherwise ->
               do let tagname = substring str index spaceOrCloseTag
                  openF tagname
-                 closingTag <- findAttributes (spaceOrCloseTag + 1)
+                 result <- findAttributes spaceOrCloseTag
                  endOpenF tagname
-                 findLT (closingTag + 1)
+                 case result of
+                   Right closingTag -> findLT (closingTag + 1)
+                   Left closingPair -> do
+                     closeF tagname
+                     findLT (closingPair + 2)
       where
         index =
           if S.index str index0 == slashChar
             then index0 + 1
             else index0
     findAttributes index0 =
-      if S.index str index == closeTagChar
-        then pure index
-        else let afterAttrName = parseName str index
-             in if S.index str afterAttrName == equalChar
-                  then let quoteIndex = afterAttrName + 1
-                           usedChar = S.index str quoteIndex
-                       in if usedChar == quoteChar ||
-                             usedChar == doubleQuoteChar
-                            then case elemIndexFrom
-                                        usedChar
-                                        str
-                                        (quoteIndex + 1) of
-                                   Nothing ->
-                                     error
-                                       "Expecting matching ' or \" to close attribute value."
-                                   Just endQuoteIndex ->
-                                     do attrF (substring str index afterAttrName)
-                                              (substring str (quoteIndex+1) (endQuoteIndex))
-                                        findAttributes (endQuoteIndex + 1)
-                            else error
-                                   "Expecting ' or \" for attribute value, after '='."
-                  else error "Expecting '=' after attribute name."
+      if S.index str index == slashChar &&
+         S.index str (index + 1) == closeTagChar
+        then pure (Left index)
+        else if S.index str index == closeTagChar
+               then pure (Right index)
+               else let afterAttrName = parseName str index
+                    in if S.index str afterAttrName == equalChar
+                         then let quoteIndex = afterAttrName + 1
+                                  usedChar = S.index str quoteIndex
+                              in if usedChar == quoteChar ||
+                                    usedChar == doubleQuoteChar
+                                   then case elemIndexFrom
+                                               usedChar
+                                               str
+                                               (quoteIndex + 1) of
+                                          Nothing ->
+                                            error
+                                              "Expecting matching ' or \" to close attribute value."
+                                          Just endQuoteIndex -> do
+                                            attrF
+                                              (substring str index afterAttrName)
+                                              (substring
+                                                 str
+                                                 (quoteIndex + 1)
+                                                 (endQuoteIndex))
+                                            findAttributes (endQuoteIndex + 1)
+                                   else error
+                                          "Expecting ' or \" for attribute value, after '='."
+                         else error "Expecting '=' after attribute name."
       where
         index = skipSpaces str index0
 {-# INLINE process #-}
