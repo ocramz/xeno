@@ -1,3 +1,4 @@
+{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -107,28 +108,27 @@ process openF textF closeF str = findLT 0
           where this = S.drop index str
     findTagName index0 =
       let spaceOrCloseTag = findEndOfTagName str index
-      in if S.index str spaceOrCloseTag == closeTagChar
-           then do
-             let tagname = substring str index spaceOrCloseTag
-             if S.index str index0 == questionChar
-               then return ()
-               else if S.index str index0 == slashChar
-                      then closeF tagname
-                      else openF tagname
-             findLT (spaceOrCloseTag + 1)
-           else if S.index str spaceOrCloseTag == spaceChar
-                  then case elemIndexFrom closeTagChar str spaceOrCloseTag of
-                         Nothing ->
-                           error "Couldn't find matching '>' character."
-                         Just fromGt -> do
-                           let tagname = substring str index spaceOrCloseTag
-                           if S.index str index0 == questionChar
-                             then return ()
-                             else if S.index str index0 == slashChar
-                                    then closeF tagname
-                                    else openF tagname
-                           findLT (fromGt + 1)
-                  else error "Expecting space or closing '>' after tag name."
+      in if | S.index str spaceOrCloseTag == closeTagChar ->
+              do let tagname = substring str index spaceOrCloseTag
+                 if S.index str index0 == questionChar
+                   then return ()
+                   else if S.index str index0 == slashChar
+                          then closeF tagname
+                          else openF tagname
+                 findLT (spaceOrCloseTag + 1)
+            | S.index str spaceOrCloseTag == spaceChar ->
+              case elemIndexFrom closeTagChar str spaceOrCloseTag of
+                Nothing -> error "Couldn't find matching '>' character."
+                Just fromGt -> do
+                  let tagname = substring str index spaceOrCloseTag
+                  if S.index str index0 == questionChar
+                    then return ()
+                    else if S.index str index0 == slashChar
+                           then closeF tagname
+                           else openF tagname
+                  findLT (fromGt + 1)
+            | otherwise ->
+              error "Expecting space or closing '>' after tag name."
       where
         index =
           if S.index str index0 == questionChar ||
