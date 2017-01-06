@@ -14,23 +14,16 @@
 module Xeno.Vectorize where
 
 import           Control.Monad.ST
-import           Control.Monad.State.Strict
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import           Data.ByteString.Internal (ByteString(PS))
+import           Data.IntRef
 import           Data.MutableByteArray
+import           Data.STRef
 import           Data.Vector.Unboxed ((!))
 import           Data.Vector.Unboxed (Vector)
 import qualified Data.Vector.Unboxed as V
 import           Xeno
-import Data.STRef
-
--- | The three bangs below are the diff between 856us and 672us. See commit.
-data State s = State
-  { stateVec :: !(MutableByteArray s)
-  , stateSize :: !Int
-  , stateParent :: !Int
-  }
 
 parse :: ByteString -> ByteArray
 -- parse :: ByteString -> Vector Int
@@ -38,14 +31,14 @@ parse str =
   runST
     (do nil <- newMutableIntArray 1000
         vecRef <- newSTRef nil
-        sizeRef <- newSTRef 0
-        parentRef <- newSTRef 0
+        sizeRef <- newIntRef 0
+        parentRef <- newIntRef 0
         process
           (\name -> do
              let tag = 0x00
                  (name_start, name_end) = byteStringOffset name
                  tag_end = -1
-             index <- readSTRef sizeRef
+             index <- readIntRef sizeRef
              v' <-
                do v <- readSTRef vecRef
                   if index + 5 < intArraySize v
@@ -55,16 +48,16 @@ parse str =
                       v' <- resizeMutableByteArray v newSize
                       writeSTRef vecRef v'
                       return v'
-             do writeSTRef parentRef index
-                writeSTRef sizeRef (index + 5)
+             do writeIntRef parentRef index
+                writeIntRef sizeRef (index + 5)
              do writeIntArray v' index tag
-                tag_parent <- readSTRef parentRef
+                tag_parent <- readIntRef parentRef
                 writeIntArray v' (index + 1) tag_parent
                 writeIntArray v' (index + 2) name_start
                 writeIntArray v' (index + 3) name_end
                 writeIntArray v' (index + 4) tag_end)
           (\key value -> do
-             index <- readSTRef sizeRef
+             index <- readIntRef sizeRef
              v' <-
                do v <- readSTRef vecRef
                   if index + 5 < intArraySize v
@@ -75,7 +68,7 @@ parse str =
                       writeSTRef vecRef v'
                       return v'
              let tag = 0x02
-             do writeSTRef sizeRef (index + 5)
+             do writeIntRef sizeRef (index + 5)
              do let (key_start, key_end) = byteStringOffset key
                     (value_start, value_end) = byteStringOffset value
                 writeIntArray v' index tag
@@ -87,7 +80,7 @@ parse str =
           (\text -> do
              let tag = 0x01
                  (name_start, name_end) = byteStringOffset text
-             index <- readSTRef sizeRef
+             index <- readIntRef sizeRef
              v' <- do
                v <- readSTRef vecRef
                if index + 3 < intArraySize v
@@ -97,17 +90,17 @@ parse str =
                    v' <- resizeMutableByteArray v newSize
                    writeSTRef vecRef v'
                    return v'
-             do writeSTRef sizeRef (index + 3)
+             do writeIntRef sizeRef (index + 3)
              do writeIntArray v' (index) tag
                 writeIntArray v' (index + 1) name_start
                 writeIntArray v' (index + 2) name_end)
           (\_ -> do
-             index <- readSTRef sizeRef
+             index <- readIntRef sizeRef
              v <- readSTRef vecRef
-             parent <- readSTRef parentRef
+             parent <- readIntRef parentRef
              writeIntArray v (parent + 4) index
              previousParent <- readIntArray v (parent + 1)
-             writeSTRef parentRef previousParent)
+             writeIntRef parentRef previousParent)
           str
         wet <- readSTRef vecRef
         arr <- unsafeFreezeByteArray wet
