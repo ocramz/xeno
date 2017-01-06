@@ -14,7 +14,7 @@
 module Xeno.Vectorize where
 
 import           Control.Monad.ST
-import           Control.Monad.State
+import           Control.Monad.State.Strict
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import           Data.ByteString.Internal (ByteString(PS))
@@ -50,8 +50,7 @@ parse str =
                          then pure v
                          else do
                            let newSize = intArraySize v * 2
-                           -- trace ("resizing to " ++ show newSize) (return ())
-                           resizeMutableByteArray v newSize -- DON'T do this on every push. just do
+                           resizeMutableByteArray v newSize
                        )
                   lift
                     (do writeIntArray v' index tag
@@ -74,8 +73,7 @@ parse str =
                          then pure v
                          else do
                            let newSize = intArraySize v * 2
-                           -- trace ("resizing to " ++ show newSize) (return ())
-                           resizeMutableByteArray v newSize -- DON'T do this on every push. just do
+                           resizeMutableByteArray v newSize
                        )
                   let tag = 0x02
                   lift
@@ -103,8 +101,7 @@ parse str =
                          then pure v
                          else do
                            let newSize = intArraySize v * 2
-                           -- trace ("resizing to " ++ show newSize) (return ())
-                           resizeMutableByteArray v newSize -- DON'T do this on every push. just do
+                           resizeMutableByteArray v newSize
                        )
                   lift
                     (do writeIntArray v' (index) tag
@@ -113,11 +110,8 @@ parse str =
                   modify (\s -> s {stateVec = v', stateSize = index + 3}))
                (\_ -> do
                   (State vec index parent) <- get
-                  -- trace ("[close] Write [" ++ show (parent + 4) ++ "] = " ++ show index) (return ())
                   lift (writeIntArray vec (parent + 4) index)
-                  -- trace ("[close] Read [" ++ show (parent + 1) ++ "]") (return ())
                   previousParent <- lift (readIntArray vec (parent + 1))
-                  -- trace ("[close] Read: " ++ show previousParent) (return ())
                   setParent previousParent
                   return ())
                str)
