@@ -90,48 +90,72 @@ as Hexml more or less.
 
 Memory benchmarks for Xeno:
 
-    Case             Bytes  GCs  Check
-    4kb validate     2,304    0  OK
-    31kb validate    1,728    0  OK
-    211kb validate  38,400    0  OK
+    Case                Bytes  GCs  Check
+    4kb/xeno/sax        2,376    0  OK
+    31kb/xeno/sax       1,824    0  OK
+    211kb/xeno/sax     56,832    0  OK
+    4kb/xeno/dom       11,360    0  OK
+    31kb/xeno/dom      10,352    0  OK
+    211kb/xeno/dom  1,082,816    0  OK
 
 Speed benchmarks:
 
-    benchmarking 4KB/hexml
-    time                 6.152 μs   (6.134 μs .. 6.170 μs)
+    benchmarking 4KB/hexml/dom
+    time                 6.317 μs   (6.279 μs .. 6.354 μs)
                          1.000 R²   (1.000 R² .. 1.000 R²)
-    mean                 6.137 μs   (6.127 μs .. 6.150 μs)
-    std dev              40.77 ns   (32.13 ns .. 57.46 ns)
+    mean                 6.333 μs   (6.307 μs .. 6.362 μs)
+    std dev              97.15 ns   (77.15 ns .. 125.3 ns)
+    variance introduced by outliers: 13% (moderately inflated)
 
-    benchmarking 4KB/xeno
-    time                 4.886 μs   (4.863 μs .. 4.915 μs)
+    benchmarking 4KB/xeno/sax
+    time                 5.152 μs   (5.131 μs .. 5.179 μs)
                          1.000 R²   (1.000 R² .. 1.000 R²)
-    mean                 4.892 μs   (4.867 μs .. 4.919 μs)
-    std dev              87.78 ns   (65.58 ns .. 118.9 ns)
-    variance introduced by outliers: 18% (moderately inflated)
+    mean                 5.139 μs   (5.128 μs .. 5.161 μs)
+    std dev              58.02 ns   (41.25 ns .. 85.41 ns)
 
-    benchmarking 31KB/hexml
-    time                 9.872 μs   (9.810 μs .. 9.942 μs)
-                         1.000 R²   (0.999 R² .. 1.000 R²)
-    mean                 9.875 μs   (9.825 μs .. 9.966 μs)
-    std dev              206.0 ns   (166.7 ns .. 281.0 ns)
-    variance introduced by outliers: 21% (moderately inflated)
+    benchmarking 4KB/xeno/dom
+    time                 10.93 μs   (10.83 μs .. 11.14 μs)
+                         0.994 R²   (0.983 R² .. 0.999 R²)
+    mean                 11.35 μs   (11.12 μs .. 11.91 μs)
+    std dev              1.188 μs   (458.7 ns .. 2.148 μs)
+    variance introduced by outliers: 87% (severely inflated)
 
-    benchmarking 31KB/xeno
-    time                 2.614 μs   (2.602 μs .. 2.625 μs)
+    benchmarking 31KB/hexml/dom
+    time                 9.405 μs   (9.348 μs .. 9.480 μs)
+                         0.999 R²   (0.998 R² .. 0.999 R²)
+    mean                 9.745 μs   (9.599 μs .. 10.06 μs)
+    std dev              745.3 ns   (598.6 ns .. 902.4 ns)
+    variance introduced by outliers: 78% (severely inflated)
+
+    benchmarking 31KB/xeno/sax
+    time                 2.736 μs   (2.723 μs .. 2.753 μs)
                          1.000 R²   (1.000 R² .. 1.000 R²)
-    mean                 2.617 μs   (2.608 μs .. 2.635 μs)
-    std dev              39.65 ns   (31.27 ns .. 53.55 ns)
-    variance introduced by outliers: 14% (moderately inflated)
+    mean                 2.757 μs   (2.742 μs .. 2.791 μs)
+    std dev              76.93 ns   (43.62 ns .. 136.1 ns)
+    variance introduced by outliers: 35% (moderately inflated)
 
-    benchmarking 211KB/hexml
-    time                 255.8 μs   (254.4 μs .. 257.3 μs)
+    benchmarking 31KB/xeno/dom
+    time                 5.767 μs   (5.735 μs .. 5.814 μs)
+                         0.999 R²   (0.999 R² .. 1.000 R²)
+    mean                 5.759 μs   (5.728 μs .. 5.810 μs)
+    std dev              127.3 ns   (79.02 ns .. 177.2 ns)
+    variance introduced by outliers: 24% (moderately inflated)
+
+    benchmarking 211KB/hexml/dom
+    time                 260.3 μs   (259.8 μs .. 260.8 μs)
                          1.000 R²   (1.000 R² .. 1.000 R²)
-    mean                 255.5 μs   (254.9 μs .. 256.7 μs)
-    std dev              2.845 μs   (1.973 μs .. 4.409 μs)
+    mean                 259.9 μs   (259.7 μs .. 260.3 μs)
+    std dev              959.9 ns   (821.8 ns .. 1.178 μs)
 
-    benchmarking 211KB/xeno
-    time                 239.7 μs   (238.0 μs .. 241.1 μs)
-                         1.000 R²   (0.999 R² .. 1.000 R²)
-    mean                 239.6 μs   (238.7 μs .. 240.8 μs)
-    std dev              3.965 μs   (2.998 μs .. 5.581 μs)
+    benchmarking 211KB/xeno/sax
+    time                 249.2 μs   (248.5 μs .. 250.1 μs)
+                         1.000 R²   (1.000 R² .. 1.000 R²)
+    mean                 251.5 μs   (250.6 μs .. 253.0 μs)
+    std dev              3.944 μs   (3.032 μs .. 5.345 μs)
+
+    benchmarking 211KB/xeno/dom
+    time                 543.1 μs   (539.4 μs .. 547.0 μs)
+                         0.999 R²   (0.999 R² .. 1.000 R²)
+    mean                 550.0 μs   (545.3 μs .. 553.6 μs)
+    std dev              14.39 μs   (12.45 μs .. 17.12 μs)
+    variance introduced by outliers: 17% (moderately inflated)

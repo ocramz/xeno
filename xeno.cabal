@@ -6,8 +6,8 @@ cabal-version: >=1.10
 library
   hs-source-dirs: src
   ghc-options: -Wall -O2
-  exposed-modules: Xeno
-  build-depends: base >= 4.7 && < 5, bytestring, vector, deepseq, ghc-prim, mtl
+  exposed-modules: Xeno.SAX, Xeno.DOM
+  build-depends: base >= 4.7 && < 5, bytestring, vector, deepseq, array, mutable-containers, mtl, spoon
   default-language: Haskell2010
 
 test-suite xeno-test
@@ -22,7 +22,7 @@ benchmark xeno-speed-bench
   type: exitcode-stdio-1.0
   hs-source-dirs: bench
   main-is: Speed.hs
-  build-depends: base, xeno, hexml, criterion, bytestring, deepseq, ghc-prim
+  build-depends: base, xeno, hexml, criterion, bytestring, deepseq, ghc-prim, xml, hexpat
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N -O2
   default-language: Haskell2010
 
@@ -30,6 +30,6 @@ benchmark xeno-memory-bench
   type: exitcode-stdio-1.0
   hs-source-dirs: bench
   main-is: Memory.hs
-  build-depends: base, xeno, weigh, bytestring, deepseq
+  build-depends: base, xeno, weigh, bytestring, deepseq, hexml
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N -O2
   default-language: Haskell2010

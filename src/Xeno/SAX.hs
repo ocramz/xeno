@@ -4,9 +4,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE BangPatterns #-}
 
--- | Test XML parser.
+-- | SAX parser and API for XML.
 
-module Xeno
+module Xeno.SAX
   ( process
   , fold
   , validate
@@ -177,7 +177,7 @@ process openF attrF endOpenF textF closeF str = findLT 0
                                             findAttributes (endQuoteIndex + 1)
                                    else error
                                           "Expecting ' or \" for attribute value, after '='."
-                         else error "Expecting '=' after attribute name."
+                         else error ("Expecting '=' after attribute name, but got: " ++ show (S.take 100 (S.drop afterAttrName str)))
       where
         index = skipSpaces str index0
 {-# INLINE process #-}
@@ -237,7 +237,8 @@ isSpaceChar c = c == 32 || (c <= 10 && c >= 9) || c == 13
 
 -- | Is the character a valid tag name constituent?
 isNameChar :: Word8 -> Bool
-isNameChar c = (c >= 97 && c <= 122) || (c >= 65 && c <= 90) || c == 95
+isNameChar c =
+  (c >= 97 && c <= 122) || (c >= 65 && c <= 90) || c == 95 || c == 45
 {-# INLINE isNameChar #-}
 
 -- | Char for '\''.
