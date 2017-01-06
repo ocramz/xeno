@@ -11,6 +11,7 @@ import           Criterion.Main
 import qualified Data.ByteString as S
 import qualified Text.XML.Hexml as Hexml
 import qualified Xeno
+import qualified Xeno.Vectorize
 
 main :: IO ()
 main =
@@ -22,6 +23,7 @@ main =
              "4KB"
              [ bench "hexml" (whnf Hexml.parse input)
              , bench "xeno" (whnf Xeno.validate input)
+             , bench "xeno-vectorize" (whnf Xeno.Vectorize.parse input)
              ])
     , env
         (S.readFile "data/text-31kb.xml")
@@ -30,6 +32,7 @@ main =
              "31KB"
              [ bench "hexml" (whnf Hexml.parse input)
              , bench "xeno" (whnf Xeno.validate input)
+             , bench "xeno-vectorize" (whnf Xeno.Vectorize.parse input)
              ])
     , env
         (S.readFile "data/fabricated-211kb.xml")
@@ -38,5 +41,6 @@ main =
              "211KB"
              [ bench "hexml" (whnf Hexml.parse input)
              , bench "xeno" (whnf Xeno.validate input)
+             , bench "xeno-vectorize" (whnf Xeno.Vectorize.parse input)
              ])
     ]

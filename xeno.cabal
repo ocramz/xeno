@@ -5,9 +5,9 @@ cabal-version: >=1.10
 
 library
   hs-source-dirs: src
-  ghc-options: -Wall -O2
-  exposed-modules: Xeno, Xeno.DOM
-  build-depends: base >= 4.7 && < 5, bytestring, vector, deepseq, ghc-prim, mtl, containers, primitive
+  ghc-options: -Wall -O2 -ddump-simpl
+  exposed-modules: Xeno, Xeno.Vectorize
+  build-depends: base >= 4.7 && < 5, bytestring, vector, deepseq, ghc-prim, mtl, containers, primitive, array
   default-language: Haskell2010
 
 test-suite xeno-test
