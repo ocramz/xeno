@@ -15,58 +15,77 @@ module Xeno.Vectorize where
 
 import           Control.Monad.ST
 import           Control.Monad.State
+import qualified Data.Array.MArray as MA
 import           Data.Array.ST
+import qualified Data.Array.Unboxed as UA
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import           Data.ByteString.Internal (ByteString(PS))
+import           Data.MutableByteArray
 import           Data.Vector.Unboxed ((!))
 import           Data.Vector.Unboxed (Vector)
 import qualified Data.Vector.Unboxed as V
 import qualified Data.Vector.Unboxed.Mutable as MV
+import           Debug.Trace
 import           Xeno
-import qualified Data.Array.MArray as MA
-import qualified Data.Array.Unboxed as UA
-import Data.MutableByteArray
 
 data State s = State
-  { stateVec :: !(MutableByteArray s)
+  { stateVec :: (MutableByteArray s)
   , stateSize :: !Int
-  , stateParent :: !Int
+  , stateParent :: Int
   }
 
 parse :: ByteString -> ByteArray -- Vector Int
 parse str =
   runST
-    (do nil <- newMutableByteArray 10000
+    (do nil <- newMutableIntArray 1000
+        -- trace ("size " ++ show (intArraySize nil)) (return ())
         (State vec size _) <-
           execStateT
             (process
                (\name -> do
-                  (State _ index tag_parent) <- get
-                  setParent index
+                  (State v index tag_parent) <- get
+
                   let tag = 0x00
                       (name_start, name_end) = byteStringOffset name
                       tag_end = -1
-                  push tag
-                  push tag_parent
-                  push name_start
-                  push name_end
-                  push tag_end)
+                  v' <- lift (if index+5 < intArraySize v
+                       then pure v
+                       else do let newSize = intArraySize v * 2
+                               -- trace ("resizing to " ++ show newSize) (return ())
+                               resizeMutableByteArray v newSize)-- DON'T do this on every push. just do
+
+                  lift (do writeIntArray v' index tag
+                           writeIntArray v' (index + 1) tag_parent
+                           writeIntArray v' (index + 2) name_start
+                           writeIntArray v' (index + 3) name_end
+                           writeIntArray v' (index + 4) tag_end)
+                  modify (\s -> s {stateVec=v', stateParent=index,stateSize=index + 5}))
                (\_key _value -> return ())
                (\_name -> return ())
                (\text -> do
                   let tag = 0x01
                       (name_start, name_end) = byteStringOffset text
-                  push tag
-                  push name_start
-                  push name_end
-                  push 0x00
-                  push 0x00)
+                  (State v index _) <- get
+                  v' <- lift (if index+5 < intArraySize v
+                       then pure v
+                       else do let newSize = intArraySize v * 2
+                               -- trace ("resizing to " ++ show newSize) (return ())
+                               resizeMutableByteArray v newSize)-- DON'T do this on every push. just do
+                  lift (do writeIntArray v' (index) tag
+                           writeIntArray v' (index + 1) name_start
+                           writeIntArray v' (index + 2) name_end)
+                  modify (\s -> s {stateVec=v',stateSize = index + 3}))
                (\_ -> do
                   (State vec index parent) <- get
+                  -- trace ("[close] Write [" ++ show (parent + 4) ++ "] = " ++ show index) (return ())
                   lift (writeIntArray vec (parent + 4) index)
+                  -- trace ("[close] Read [" ++ show (parent + 1) ++ "]") (return ())
                   previousParent <- lift (readIntArray vec (parent + 1))
-                  setParent previousParent)
+                  -- trace ("[close] Read: " ++ show previousParent) (return ())
+                  setParent previousParent
+                  return ()
+               )
                str)
             (State nil 0 0)
         arr <- unsafeFreezeByteArray vec
@@ -75,19 +94,7 @@ parse str =
         )
   where
     setParent index = modify (\state -> state {stateParent = index})
-    push x = do
-      (State v i parent) <- get
-      -- buf' <-
-      lift
-      -- v' <-
-      --   if i < MV.length v - 1
-      --     then pure v
-      --     else MV.grow v (MV.length v)-- DON'T do this on
-      --                                 -- every push. just do
-      --                                 -- it once per node!!!
-        (do writeIntArray v i x
-            )
-      put (State v (i + 1) parent) -- calculate this in one go too rather than push push push
+
 
 byteStringOffset :: ByteString -> (Int,Int)
 byteStringOffset (PS _ off len) =  (off ,(off+len))

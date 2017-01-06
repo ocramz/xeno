@@ -177,7 +177,7 @@ process openF attrF endOpenF textF closeF str = findLT 0
                                             findAttributes (endQuoteIndex + 1)
                                    else error
                                           "Expecting ' or \" for attribute value, after '='."
-                         else error "Expecting '=' after attribute name."
+                         else error ("Expecting '=' after attribute name, but got: " ++ show (S.take 100 (S.drop afterAttrName str)))
       where
         index = skipSpaces str index0
 {-# INLINE process #-}
