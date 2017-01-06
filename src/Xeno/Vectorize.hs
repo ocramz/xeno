@@ -1,3 +1,7 @@
+{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE UnboxedTuples #-}
+{-# LANGUAGE BangPatterns #-}
+
 {-# LANGUAGE BangPatterns #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -33,6 +37,7 @@ parse :: ByteString -> UA.UArray Int Int
 parse str =
   runSTUArray
     (do nil <- MA.newArray_ (0,2000)
+
         (State vec size _) <-
           execStateT
             (process
