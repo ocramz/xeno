@@ -45,37 +45,76 @@ parse str =
             (process
                (\name -> do
                   (State v index tag_parent) <- get
-
                   let tag = 0x00
                       (name_start, name_end) = byteStringOffset name
                       tag_end = -1
-                  v' <- lift (if index+5 < intArraySize v
-                       then pure v
-                       else do let newSize = intArraySize v * 2
-                               -- trace ("resizing to " ++ show newSize) (return ())
-                               resizeMutableByteArray v newSize)-- DON'T do this on every push. just do
-
-                  lift (do writeIntArray v' index tag
-                           writeIntArray v' (index + 1) tag_parent
-                           writeIntArray v' (index + 2) name_start
-                           writeIntArray v' (index + 3) name_end
-                           writeIntArray v' (index + 4) tag_end)
-                  modify (\s -> s {stateVec=v', stateParent=index,stateSize=index + 5}))
-               (\_key _value -> return ())
+                  v' <-
+                    lift
+                      (if index + 5 < intArraySize v
+                         then pure v
+                         else do
+                           let newSize = intArraySize v * 2
+                           -- trace ("resizing to " ++ show newSize) (return ())
+                           resizeMutableByteArray v newSize -- DON'T do this on every push. just do
+                       )
+                  lift
+                    (do writeIntArray v' index tag
+                        writeIntArray v' (index + 1) tag_parent
+                        writeIntArray v' (index + 2) name_start
+                        writeIntArray v' (index + 3) name_end
+                        writeIntArray v' (index + 4) tag_end)
+                  modify
+                    (\s ->
+                       s
+                       { stateVec = v'
+                       , stateParent = index
+                       , stateSize = index + 5
+                       }))
+               (\key value -> do
+                  (State v index _) <- get
+                  v' <-
+                    lift
+                      (if index + 5 < intArraySize v
+                         then pure v
+                         else do
+                           let newSize = intArraySize v * 2
+                           -- trace ("resizing to " ++ show newSize) (return ())
+                           resizeMutableByteArray v newSize -- DON'T do this on every push. just do
+                       )
+                  let tag = 0x02
+                  lift
+                    (do let (key_start, key_end) = byteStringOffset key
+                            (value_start, value_end) = byteStringOffset value
+                        writeIntArray v' index tag
+                        writeIntArray v' (index + 1) key_start
+                        writeIntArray v' (index + 2) key_end
+                        writeIntArray v' (index + 1) value_start
+                        writeIntArray v' (index + 2) value_end)
+                  modify
+                    (\s ->
+                       s
+                       { stateVec = v'
+                       , stateSize = index + 5
+                       }))
                (\_name -> return ())
                (\text -> do
                   let tag = 0x01
                       (name_start, name_end) = byteStringOffset text
                   (State v index _) <- get
-                  v' <- lift (if index+5 < intArraySize v
-                       then pure v
-                       else do let newSize = intArraySize v * 2
-                               -- trace ("resizing to " ++ show newSize) (return ())
-                               resizeMutableByteArray v newSize)-- DON'T do this on every push. just do
-                  lift (do writeIntArray v' (index) tag
-                           writeIntArray v' (index + 1) name_start
-                           writeIntArray v' (index + 2) name_end)
-                  modify (\s -> s {stateVec=v',stateSize = index + 3}))
+                  v' <-
+                    lift
+                      (if index + 5 < intArraySize v
+                         then pure v
+                         else do
+                           let newSize = intArraySize v * 2
+                           -- trace ("resizing to " ++ show newSize) (return ())
+                           resizeMutableByteArray v newSize -- DON'T do this on every push. just do
+                       )
+                  lift
+                    (do writeIntArray v' (index) tag
+                        writeIntArray v' (index + 1) name_start
+                        writeIntArray v' (index + 2) name_end)
+                  modify (\s -> s {stateVec = v', stateSize = index + 3}))
                (\_ -> do
                   (State vec index parent) <- get
                   -- trace ("[close] Write [" ++ show (parent + 4) ++ "] = " ++ show index) (return ())
@@ -84,14 +123,12 @@ parse str =
                   previousParent <- lift (readIntArray vec (parent + 1))
                   -- trace ("[close] Read: " ++ show previousParent) (return ())
                   setParent previousParent
-                  return ()
-               )
+                  return ())
                str)
             (State nil 0 0)
         arr <- unsafeFreezeByteArray vec
         -- return (byteArrayToIntVectorDebug arr size)
-        return arr
-        )
+        return arr)
   where
     setParent index = modify (\state -> state {stateParent = index})
 
