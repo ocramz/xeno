@@ -31,7 +31,7 @@ import           Xeno
 
 data State s = State
   { stateVec :: (MutableByteArray s)
-  , stateSize :: !Int
+  , stateSize :: Int
   , stateParent :: Int
   }
 
