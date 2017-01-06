@@ -29,10 +29,11 @@ import qualified Data.Vector.Unboxed.Mutable as MV
 import           Debug.Trace
 import           Xeno
 
+-- | The three bangs below are the diff between 856us and 672us. See commit.
 data State s = State
-  { stateVec :: (MutableByteArray s)
-  , stateSize :: Int
-  , stateParent :: Int
+  { stateVec :: !(MutableByteArray s)
+  , stateSize :: !Int
+  , stateParent :: !Int
   }
 
 parse :: ByteString -> ByteArray -- Vector Int
