@@ -15,9 +15,6 @@ module Xeno.Vectorize where
 
 import           Control.Monad.ST
 import           Control.Monad.State
-import qualified Data.Array.MArray as MA
-import           Data.Array.ST
-import qualified Data.Array.Unboxed as UA
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import           Data.ByteString.Internal (ByteString(PS))
@@ -25,8 +22,6 @@ import           Data.MutableByteArray
 import           Data.Vector.Unboxed ((!))
 import           Data.Vector.Unboxed (Vector)
 import qualified Data.Vector.Unboxed as V
-import qualified Data.Vector.Unboxed.Mutable as MV
-import           Debug.Trace
 import           Xeno
 
 -- | The three bangs below are the diff between 856us and 672us. See commit.
@@ -89,8 +84,8 @@ parse str =
                         writeIntArray v' index tag
                         writeIntArray v' (index + 1) key_start
                         writeIntArray v' (index + 2) key_end
-                        writeIntArray v' (index + 1) value_start
-                        writeIntArray v' (index + 2) value_end)
+                        writeIntArray v' (index + 3) value_start
+                        writeIntArray v' (index + 4) value_end)
                   modify
                     (\s ->
                        s
@@ -129,7 +124,8 @@ parse str =
             (State nil 0 0)
         arr <- unsafeFreezeByteArray vec
         -- return (byteArrayToIntVectorDebug arr size)
-        return arr)
+        return arr
+        )
   where
     setParent index = modify (\state -> state {stateParent = index})
 
