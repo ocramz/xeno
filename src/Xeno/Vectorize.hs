@@ -96,7 +96,8 @@ parse str =
              parent <- readIntRef parentRef
              writeIntArray v (parent + 4) index
              previousParent <- readIntArray v (parent + 1)
-             writeIntRef parentRef previousParent)
+             writeIntRef parentRef previousParent
+             )
           str
         wet <- readSTRef vecRef
         arr <- unsafeFreezeByteArray wet
