@@ -30,8 +30,8 @@ parse :: ByteString -> ByteArray
 parse str =
   runST
     (do nil <- newMutableIntArray 1000
-        vecRef <- newSTRef nil
-        sizeRef <- newIntRef 0
+        vecRef <- newSTRef nil -- MutVar?
+        sizeRef <- newIntRef 0--unbox the I#?
         parentRef <- newIntRef 0
         process
           (\name -> do
