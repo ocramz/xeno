@@ -40,13 +40,13 @@ byteArrayToIntVectorDebug (ByteArray x) count =
 resizeMutableByteArray :: MutableByteArray s -> Int -> ST s (MutableByteArray s)
 resizeMutableByteArray (MutableByteArray a) (I# size) =
   ST (\s ->
-    case resizeMutableByteArray# a (size *# 8#) s of
+    case resizeMutableByteArray# a (size *# 4#) s of
       (# s', a #) ->
         (# s', MutableByteArray a #))
 {-# INLINE resizeMutableByteArray #-}
 
 intArraySize :: MutableByteArray s -> Int
-intArraySize (MutableByteArray a) = div (I# (sizeofMutableByteArray# a)) 8
+intArraySize (MutableByteArray a) = div (I# (sizeofMutableByteArray# a)) 4
 {-# INLINE intArraySize #-}
 
 -- | Create a mutable array of the given size.
@@ -54,14 +54,14 @@ newMutableIntArray :: Int -> ST s (MutableByteArray s)
 newMutableIntArray (I# size) =
   ST
     (\s ->
-       case newByteArray# (size *# 8#) s of
+       case newByteArray# (size *# 4#) s of
          (# s', a #) -> (# s', MutableByteArray  a #))
 {-# INLINE newMutableIntArray #-}
 
 -- | Read from the array like an integer array.
 readIntArray :: MutableByteArray s -> Int -> ST s Int
 readIntArray (MutableByteArray  a) (I# i) =
-  ST (\s -> case readInt64Array# a i s of
+  ST (\s -> case readInt32Array# a i s of
      (# s', v #) -> (# s', I# v #))
 
 -- readIntArray (MutableByteArray size a) !i'@(I# i) =
@@ -75,7 +75,7 @@ readIntArray (MutableByteArray  a) (I# i) =
 writeIntArray :: MutableByteArray s -> Int -> Int -> ST s ()
 
 writeIntArray (MutableByteArray  a) (I# i) (I# v) =
-  ST (\s -> case writeInt64Array# a i v s of
+  ST (\s -> case writeInt32Array# a i v s of
               s' -> (# s', () #))
 
 -- writeIntArray (MutableByteArray size a) !i'@(I# i) !(I# v) =

@@ -31,12 +31,11 @@ parse str =
   runST
     (do nil <- newMutableIntArray 1000
         vecRef <- newSTRef nil -- MutVar?
-        sizeRef <- newIntRef 0--unbox the I#?
+        sizeRef <- newIntRef 0 --unbox the I#
         parentRef <- newIntRef 0
         process
-          (\name -> do
+          (\(PS _ name_start name_end) -> do
              let tag = 0x00
-                 (name_start, name_end) = byteStringOffset name
                  tag_end = -1
              index <- readIntRef sizeRef
              v' <-
@@ -56,7 +55,7 @@ parse str =
                 writeIntArray v' (index + 2) name_start
                 writeIntArray v' (index + 3) name_end
                 writeIntArray v' (index + 4) tag_end)
-          (\key value -> do
+          (\(PS _ key_start key_end) (PS _ value_start value_end) -> do
              index <- readIntRef sizeRef
              v' <-
                do v <- readSTRef vecRef
@@ -69,27 +68,24 @@ parse str =
                       return v'
              let tag = 0x02
              do writeIntRef sizeRef (index + 5)
-             do let (key_start, key_end) = byteStringOffset key
-                    (value_start, value_end) = byteStringOffset value
-                writeIntArray v' index tag
+             do writeIntArray v' index tag
                 writeIntArray v' (index + 1) key_start
                 writeIntArray v' (index + 2) key_end
                 writeIntArray v' (index + 3) value_start
                 writeIntArray v' (index + 4) value_end)
           (\_name -> return ())
-          (\text -> do
+          (\(PS _ name_start name_end) -> do
              let tag = 0x01
-                 (name_start, name_end) = byteStringOffset text
              index <- readIntRef sizeRef
-             v' <- do
-               v <- readSTRef vecRef
-               if index + 3 < intArraySize v
-                 then pure v
-                 else do
-                   let newSize = intArraySize v * 2
-                   v' <- resizeMutableByteArray v newSize
-                   writeSTRef vecRef v'
-                   return v'
+             v' <-
+               do v <- readSTRef vecRef
+                  if index + 3 < intArraySize v
+                    then pure v
+                    else do
+                      let newSize = intArraySize v * 2
+                      v' <- resizeMutableByteArray v newSize
+                      writeSTRef vecRef v'
+                      return v'
              do writeIntRef sizeRef (index + 3)
              do writeIntArray v' (index) tag
                 writeIntArray v' (index + 1) name_start
@@ -106,12 +102,11 @@ parse str =
         arr <- unsafeFreezeByteArray wet
         -- size <- readSTRef sizeRef
         -- return (byteArrayToIntVectorDebug arr size)
-        return arr
-    )
+        return arr)
 
-byteStringOffset :: ByteString -> (Int,Int)
-byteStringOffset (PS _ off len) =  (off ,(off+len))
-{-# INLINE byteStringOffset #-}
+-- byteStringOffset :: ByteString -> (Int,Int)
+-- byteStringOffset (PS _ off len) =  (off ,(off+len))
+-- {-# INLINE byteStringOffset #-}
 
 chuck :: ByteString -> Vector Int -> IO ()
 chuck original buffer = go 0
