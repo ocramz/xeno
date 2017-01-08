@@ -146,7 +146,7 @@ chuck original buffer = go 0
                                , "text_end = " ++ show text_end
                                , "text: " ++ show (substring original text_start text_end)
                                ]))
-                       go (i + 5)
+                       go (i + 3)
         else return ()
 
 -- {-
