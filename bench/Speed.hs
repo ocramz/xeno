@@ -17,7 +17,6 @@ import qualified Text.XML.Expat.SAX as Hexpat
 import qualified Text.XML.Expat.Tree as HexpatTree
 import qualified Text.XML.Hexml as Hexml
 import           Text.XML.Light
-import           Text.XML.Light as XML
 import qualified Xeno
 import qualified Xeno.Vectorize
 

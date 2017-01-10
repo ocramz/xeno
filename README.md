@@ -90,48 +90,114 @@ as Hexml more or less.
 
 Memory benchmarks for Xeno:
 
-    Case             Bytes  GCs  Check
-    4kb validate     2,304    0  OK
-    31kb validate    1,728    0  OK
-    211kb validate  38,400    0  OK
+    Case                Bytes  GCs  Check
+    4kb validate        2,376    0  OK
+    31kb validate       1,824    0  OK
+    211kb validate     56,832    0  OK
+    4kb                10,880    0  OK
+    31kb               10,256    0  OK
+    211kb           1,078,136    0  OK
 
 Speed benchmarks:
 
-    benchmarking 4KB/hexml
-    time                 6.152 μs   (6.134 μs .. 6.170 μs)
-                         1.000 R²   (1.000 R² .. 1.000 R²)
-    mean                 6.137 μs   (6.127 μs .. 6.150 μs)
-    std dev              40.77 ns   (32.13 ns .. 57.46 ns)
+    benchmarking 4KB/hexml/tree
+    time                 6.264 μs   (6.196 μs .. 6.352 μs)
+                         0.998 R²   (0.994 R² .. 1.000 R²)
+    mean                 6.311 μs   (6.256 μs .. 6.523 μs)
+    std dev              291.9 ns   (144.5 ns .. 599.2 ns)
+    variance introduced by outliers: 58% (severely inflated)
 
-    benchmarking 4KB/xeno
-    time                 4.886 μs   (4.863 μs .. 4.915 μs)
-                         1.000 R²   (1.000 R² .. 1.000 R²)
-    mean                 4.892 μs   (4.867 μs .. 4.919 μs)
-    std dev              87.78 ns   (65.58 ns .. 118.9 ns)
-    variance introduced by outliers: 18% (moderately inflated)
+    benchmarking 4KB/xeno/sax
+    time                 4.947 μs   (4.905 μs .. 5.002 μs)
+                         0.999 R²   (0.997 R² .. 0.999 R²)
+    mean                 5.042 μs   (4.982 μs .. 5.129 μs)
+    std dev              248.0 ns   (172.4 ns .. 332.2 ns)
+    variance introduced by outliers: 61% (severely inflated)
 
-    benchmarking 31KB/hexml
-    time                 9.872 μs   (9.810 μs .. 9.942 μs)
-                         1.000 R²   (0.999 R² .. 1.000 R²)
-    mean                 9.875 μs   (9.825 μs .. 9.966 μs)
-    std dev              206.0 ns   (166.7 ns .. 281.0 ns)
-    variance introduced by outliers: 21% (moderately inflated)
+    benchmarking 4KB/xeno/tree
+    time                 10.90 μs   (10.85 μs .. 10.97 μs)
+                         0.999 R²   (0.999 R² .. 1.000 R²)
+    mean                 11.13 μs   (11.00 μs .. 11.40 μs)
+    std dev              656.4 ns   (263.0 ns .. 1.042 μs)
+    variance introduced by outliers: 68% (severely inflated)
 
-    benchmarking 31KB/xeno
-    time                 2.614 μs   (2.602 μs .. 2.625 μs)
-                         1.000 R²   (1.000 R² .. 1.000 R²)
-    mean                 2.617 μs   (2.608 μs .. 2.635 μs)
-    std dev              39.65 ns   (31.27 ns .. 53.55 ns)
+    benchmarking 4KB/hexpat/hexpat-sax
+    time                 266.2 μs   (256.5 μs .. 275.8 μs)
+                         0.993 R²   (0.989 R² .. 0.998 R²)
+    mean                 260.5 μs   (256.5 μs .. 266.4 μs)
+    std dev              15.28 μs   (11.50 μs .. 21.05 μs)
+    variance introduced by outliers: 55% (severely inflated)
+
+    benchmarking 4KB/hexpat/hexpat-tree
+    time                 330.4 μs   (328.4 μs .. 333.4 μs)
+                         0.999 R²   (0.999 R² .. 1.000 R²)
+    mean                 330.4 μs   (328.8 μs .. 333.0 μs)
+    std dev              7.107 μs   (5.066 μs .. 10.32 μs)
     variance introduced by outliers: 14% (moderately inflated)
 
-    benchmarking 211KB/hexml
-    time                 255.8 μs   (254.4 μs .. 257.3 μs)
-                         1.000 R²   (1.000 R² .. 1.000 R²)
-    mean                 255.5 μs   (254.9 μs .. 256.7 μs)
-    std dev              2.845 μs   (1.973 μs .. 4.409 μs)
+    benchmarking 31KB/hexml/tree
+    time                 10.12 μs   (9.843 μs .. 10.40 μs)
+                         0.996 R²   (0.992 R² .. 0.999 R²)
+    mean                 9.791 μs   (9.684 μs .. 9.977 μs)
+    std dev              498.0 ns   (343.5 ns .. 793.1 ns)
+    variance introduced by outliers: 61% (severely inflated)
 
-    benchmarking 211KB/xeno
-    time                 239.7 μs   (238.0 μs .. 241.1 μs)
+    benchmarking 31KB/xeno/sax
+    time                 2.637 μs   (2.627 μs .. 2.649 μs)
                          1.000 R²   (0.999 R² .. 1.000 R²)
-    mean                 239.6 μs   (238.7 μs .. 240.8 μs)
-    std dev              3.965 μs   (2.998 μs .. 5.581 μs)
+    mean                 2.661 μs   (2.645 μs .. 2.691 μs)
+    std dev              71.86 ns   (46.10 ns .. 106.3 ns)
+    variance introduced by outliers: 34% (moderately inflated)
+
+    benchmarking 31KB/xeno/tree
+    time                 6.093 μs   (5.981 μs .. 6.211 μs)
+                         0.998 R²   (0.997 R² .. 0.999 R²)
+    mean                 5.971 μs   (5.909 μs .. 6.066 μs)
+    std dev              247.6 ns   (181.5 ns .. 344.4 ns)
+    variance introduced by outliers: 53% (severely inflated)
+
+    benchmarking 31KB/hexpat/hexpat-sax
+    time                 339.4 μs   (320.8 μs .. 365.9 μs)
+                         0.986 R²   (0.973 R² .. 0.998 R²)
+    mean                 333.1 μs   (328.0 μs .. 341.3 μs)
+    std dev              20.04 μs   (13.67 μs .. 31.33 μs)
+    variance introduced by outliers: 55% (severely inflated)
+
+    benchmarking 31KB/hexpat/hexpat-tree
+    time                 393.9 μs   (392.1 μs .. 396.0 μs)
+                         0.997 R²   (0.992 R² .. 1.000 R²)
+    mean                 408.9 μs   (402.9 μs .. 426.0 μs)
+    std dev              35.58 μs   (14.67 μs .. 63.35 μs)
+    variance introduced by outliers: 72% (severely inflated)
+
+    benchmarking 211KB/hexml/tree
+    time                 259.4 μs   (257.7 μs .. 261.7 μs)
+                         0.999 R²   (0.999 R² .. 1.000 R²)
+    mean                 258.4 μs   (257.4 μs .. 259.9 μs)
+    std dev              3.822 μs   (1.964 μs .. 5.775 μs)
+
+    benchmarking 211KB/xeno/sax
+    time                 234.1 μs   (233.4 μs .. 234.9 μs)
+                         1.000 R²   (0.999 R² .. 1.000 R²)
+    mean                 239.1 μs   (236.8 μs .. 243.2 μs)
+    std dev              9.988 μs   (6.549 μs .. 14.26 μs)
+    variance introduced by outliers: 39% (moderately inflated)
+
+    benchmarking 211KB/xeno/tree
+    time                 562.3 μs   (556.9 μs .. 568.0 μs)
+                         0.999 R²   (0.998 R² .. 1.000 R²)
+    mean                 563.1 μs   (559.4 μs .. 570.5 μs)
+    std dev              17.26 μs   (12.24 μs .. 28.09 μs)
+    variance introduced by outliers: 22% (moderately inflated)
+
+    benchmarking 211KB/hexpat/hexpat-sax
+    time                 23.37 ms   (23.25 ms .. 23.51 ms)
+                         1.000 R²   (1.000 R² .. 1.000 R²)
+    mean                 23.72 ms   (23.56 ms .. 24.03 ms)
+    std dev              520.0 μs   (256.9 μs .. 867.8 μs)
+
+    benchmarking 211KB/hexpat/hexpat-tree
+    time                 29.13 ms   (28.94 ms .. 29.42 ms)
+                         1.000 R²   (0.999 R² .. 1.000 R²)
+    mean                 29.54 ms   (29.36 ms .. 29.83 ms)
+    std dev              490.0 μs   (305.5 μs .. 686.4 μs)
