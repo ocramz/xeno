@@ -16,7 +16,6 @@ module Xeno
 import           Control.Monad.State.Strict
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
-import qualified Data.ByteString.Unsafe as S
 import qualified Data.ByteString.Char8 as S8
 import           Data.Functor.Identity
 import           Data.Monoid
@@ -99,36 +98,36 @@ process openF attrF endOpenF textF closeF str = findLT 0
     findLT index =
       case elemIndexFrom openTagChar str index of
         Nothing -> unless (S.null text) (textF text)
-          where text = S.unsafeDrop index str
+          where text = S.drop index str
         Just fromLt -> do
           unless (S.null text) (textF text)
           checkOpenComment (fromLt + 1)
           where text = substring str index fromLt
     checkOpenComment index =
-      if S.unsafeIndex this 0 == bangChar &&
-         S.unsafeIndex this 1 == commentChar && S.unsafeIndex this 2 == commentChar
+      if S.index this 0 == bangChar &&
+         S.index this 1 == commentChar && S.index this 2 == commentChar
         then findCommentEnd (index + 3)
         else findTagName index
       where
-        this = S.unsafeDrop index str
+        this = S.drop index str
     findCommentEnd index =
       case elemIndexFrom commentChar str index of
         Nothing -> error "Couldn't find comment closing '-->' characters."
         Just fromDash ->
-          if S.unsafeIndex this 0 == commentChar && S.unsafeIndex this 1 == closeTagChar
+          if S.index this 0 == commentChar && S.index this 1 == closeTagChar
             then findLT (fromDash + 2)
             else findCommentEnd (fromDash + 1)
-          where this = S.unsafeDrop index str
+          where this = S.drop index str
     findTagName index0 =
       let spaceOrCloseTag = parseName str index
-      in if | S.unsafeIndex str index0 == questionChar ->
+      in if | S.index str index0 == questionChar ->
               case elemIndexFrom closeTagChar str spaceOrCloseTag of
                 Nothing -> error "Couldn't find matching '>' character."
                 Just fromGt -> do
                   findLT (fromGt + 1)
-            | S.unsafeIndex str spaceOrCloseTag == closeTagChar ->
+            | S.index str spaceOrCloseTag == closeTagChar ->
               do let tagname = substring str index spaceOrCloseTag
-                 if S.unsafeIndex str index0 == slashChar
+                 if S.index str index0 == slashChar
                    then closeF tagname
                    else do
                      openF tagname
@@ -146,19 +145,19 @@ process openF attrF endOpenF textF closeF str = findLT 0
                      findLT (closingPair + 2)
       where
         index =
-          if S.unsafeIndex str index0 == slashChar
+          if S.index str index0 == slashChar
             then index0 + 1
             else index0
     findAttributes index0 =
-      if S.unsafeIndex str index == slashChar &&
-         S.unsafeIndex str (index + 1) == closeTagChar
+      if S.index str index == slashChar &&
+         S.index str (index + 1) == closeTagChar
         then pure (Left index)
-        else if S.unsafeIndex str index == closeTagChar
+        else if S.index str index == closeTagChar
                then pure (Right index)
                else let afterAttrName = parseName str index
-                    in if S.unsafeIndex str afterAttrName == equalChar
+                    in if S.index str afterAttrName == equalChar
                          then let quoteIndex = afterAttrName + 1
-                                  usedChar = S.unsafeIndex str quoteIndex
+                                  usedChar = S.index str quoteIndex
                               in if usedChar == quoteChar ||
                                     usedChar == doubleQuoteChar
                                    then case elemIndexFrom
@@ -178,7 +177,7 @@ process openF attrF endOpenF textF closeF str = findLT 0
                                             findAttributes (endQuoteIndex + 1)
                                    else error
                                           "Expecting ' or \" for attribute value, after '='."
-                         else error ("Expecting '=' after attribute name, but got: " ++ show (S.unsafeTake 100 (S.unsafeDrop afterAttrName str)))
+                         else error ("Expecting '=' after attribute name, but got: " ++ show (S.take 100 (S.drop afterAttrName str)))
       where
         index = skipSpaces str index0
 {-# INLINE process #-}
@@ -203,27 +202,27 @@ process openF attrF endOpenF textF closeF str = findLT 0
 -- | A fast space skipping function.
 skipSpaces :: ByteString -> Int -> Int
 skipSpaces str i =
-  if isSpaceChar (S.unsafeIndex str i)
+  if isSpaceChar (S.index str i)
     then skipSpaces str (i + 1)
     else i
 {-# INLINE skipSpaces #-}
 
 -- | Get a substring of a string.
 substring :: ByteString -> Int -> Int -> ByteString
-substring s start end = S.unsafeTake (end - start) (S.unsafeDrop start s)
+substring s start end = S.take (end - start) (S.drop start s)
 {-# INLINE substring #-}
 
 -- | Basically @findIndex (not . isNameChar)@, but doesn't allocate.
 parseName :: ByteString -> Int -> Int
 parseName str index =
-  if not (isNameChar (S.unsafeIndex str index))
+  if not (isNameChar (S.index str index))
      then index
      else parseName str (index + 1)
 {-# INLINE parseName #-}
 
 -- | Get index of an element starting from offset.
 elemIndexFrom :: Word8 -> ByteString -> Int -> Maybe Int
-elemIndexFrom c str offset = fmap (+ offset) (S.elemIndex c (S.unsafeDrop offset str))
+elemIndexFrom c str offset = fmap (+ offset) (S.elemIndex c (S.drop offset str))
 -- Without the INLINE below, the whole function is twice as slow and
 -- has linear allocation. See git commit with this comment for
 -- results.
