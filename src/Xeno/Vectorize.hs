@@ -18,20 +18,20 @@ import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import           Data.ByteString.Internal (ByteString(PS))
 import           Data.IntRef
-import           Data.MutableByteArray
 import           Data.STRef
 import           Data.Vector.Unboxed ((!))
 import           Data.Vector.Unboxed (Vector)
 import qualified Data.Vector.Unboxed as V
+import qualified Data.Vector.Unboxed.Mutable as UMV
+import qualified Data.Vector.Unboxed as UV
 import           Xeno
 
-parse :: ByteString -> ByteArray
--- parse :: ByteString -> Vector Int
+parse :: ByteString -> UV.Vector Int
 parse str =
   runST
-    (do nil <- newMutableIntArray 1000
-        vecRef <- newSTRef nil -- MutVar?
-        sizeRef <- newIntRef 0 --unbox the I#
+    (do nil <- UMV.new 1000
+        vecRef <- newSTRef nil
+        sizeRef <- newIntRef 0
         parentRef <- newIntRef 0
         process
           (\(PS _ name_start name_end) -> do
@@ -40,74 +40,65 @@ parse str =
              index <- readIntRef sizeRef
              v' <-
                do v <- readSTRef vecRef
-                  if index + 5 < intArraySize v
+                  if index + 5 < UMV.length v
                     then pure v
                     else do
-                      let newSize = intArraySize v * 2
-                      v' <- resizeMutableByteArray v newSize
+                      v' <- UMV.grow v (UMV.length v)
                       writeSTRef vecRef v'
                       return v'
              do writeIntRef parentRef index
                 writeIntRef sizeRef (index + 5)
-             do writeIntArray v' index tag
+             do UMV.write v' index tag
                 tag_parent <- readIntRef parentRef
-                writeIntArray v' (index + 1) tag_parent
-                writeIntArray v' (index + 2) name_start
-                writeIntArray v' (index + 3) name_end
-                writeIntArray v' (index + 4) tag_end)
+                UMV.write v' (index + 1) tag_parent
+                UMV.write v' (index + 2) name_start
+                UMV.write v' (index + 3) name_end
+                UMV.write v' (index + 4) tag_end)
           (\(PS _ key_start key_end) (PS _ value_start value_end) -> do
              index <- readIntRef sizeRef
              v' <-
                do v <- readSTRef vecRef
-                  if index + 5 < intArraySize v
+                  if index + 5 < UMV.length v
                     then pure v
                     else do
-                      let newSize = intArraySize v * 2
-                      v' <- resizeMutableByteArray v newSize
+                      v' <- UMV.grow v (UMV.length v)
                       writeSTRef vecRef v'
                       return v'
              let tag = 0x02
              do writeIntRef sizeRef (index + 5)
-             do writeIntArray v' index tag
-                writeIntArray v' (index + 1) key_start
-                writeIntArray v' (index + 2) key_end
-                writeIntArray v' (index + 3) value_start
-                writeIntArray v' (index + 4) value_end)
+             do UMV.write v' index tag
+                UMV.write v' (index + 1) key_start
+                UMV.write v' (index + 2) key_end
+                UMV.write v' (index + 3) value_start
+                UMV.write v' (index + 4) value_end)
           (\_name -> return ())
           (\(PS _ name_start name_end) -> do
              let tag = 0x01
              index <- readIntRef sizeRef
              v' <-
                do v <- readSTRef vecRef
-                  if index + 3 < intArraySize v
+                  if index + 3 < UMV.length v
                     then pure v
                     else do
-                      let newSize = intArraySize v * 2
-                      v' <- resizeMutableByteArray v newSize
+                      v' <- UMV.grow v (UMV.length v)
                       writeSTRef vecRef v'
                       return v'
              do writeIntRef sizeRef (index + 3)
-             do writeIntArray v' (index) tag
-                writeIntArray v' (index + 1) name_start
-                writeIntArray v' (index + 2) name_end)
+             do UMV.write v' (index) tag
+                UMV.write v' (index + 1) name_start
+                UMV.write v' (index + 2) name_end)
           (\_ -> do
              index <- readIntRef sizeRef
              v <- readSTRef vecRef
              parent <- readIntRef parentRef
-             writeIntArray v (parent + 4) index
-             previousParent <- readIntArray v (parent + 1)
-             writeIntRef parentRef previousParent
-             )
+             UMV.write v (parent + 4) index
+             previousParent <- UMV.read v (parent + 1)
+             writeIntRef parentRef previousParent)
           str
         wet <- readSTRef vecRef
-        arr <- unsafeFreezeByteArray wet
-        -- size <- readSTRef sizeRef
-        -- return (byteArrayToIntVectorDebug arr size)
-        return arr)
-
--- byteStringOffset :: ByteString -> (Int,Int)
--- byteStringOffset (PS _ off len) =  (off ,(off+len))
--- {-# INLINE byteStringOffset #-}
+        arr <- UV.unsafeFreeze wet
+        size <- readIntRef sizeRef
+        return (UV.unsafeSlice 0 size arr))
 
 chuck :: ByteString -> Vector Int -> IO ()
 chuck original buffer = go 0

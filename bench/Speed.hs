@@ -29,66 +29,78 @@ main =
         (\input ->
            bgroup
              "4KB"
-             [ bench "hexml-tree" (whnf Hexml.parse input)
-             , bench "xeno-sax" (whnf Xeno.validate input)
-             , bench "xeno-tree" (whnf Xeno.Vectorize.parse input)
-             , bench "xml-tree" (nf XML.parseXML input)
-             , bench
-                 "hexpat-sax"
-                 (nf
-                    ((Hexpat.parseThrowing Hexpat.defaultParseOptions :: L.ByteString -> [Hexpat.SAXEvent ByteString ByteString]) .
-                     L.fromStrict)
-                    input)
-             , bench
-                 "hexpat-tree"
-                 (nf
-                    ((HexpatTree.parse' HexpatTree.defaultParseOptions :: ByteString -> Either HexpatTree.XMLParseError (HexpatTree.Node ByteString ByteString))
-                     )
-                    input)
+             [ bgroup "hexml" [bench "tree" (whnf Hexml.parse input)]
+             , bgroup
+                 "xeno"
+                 [ bench "sax" (whnf Xeno.validate input)
+                 , bench "tree" (whnf Xeno.Vectorize.parse input)
+                 ]
+             , bgroup
+                 "hexpat"
+                 [ bench
+                     "hexpat-sax"
+                     (nf
+                        ((Hexpat.parseThrowing Hexpat.defaultParseOptions :: L.ByteString -> [Hexpat.SAXEvent ByteString ByteString]) .
+                         L.fromStrict)
+                        input)
+                 , bench
+                     "hexpat-tree"
+                     (nf
+                        ((HexpatTree.parse' HexpatTree.defaultParseOptions :: ByteString -> Either HexpatTree.XMLParseError (HexpatTree.Node ByteString ByteString)))
+                        input)
+                 ]
              ])
     , env
         (S.readFile "data/text-31kb.xml")
         (\input ->
            bgroup
              "31KB"
-             [ bench "hexml-tree" (whnf Hexml.parse input)
-             , bench "xeno-sax" (whnf Xeno.validate input)
-             , bench "xeno-vectorize" (whnf Xeno.Vectorize.parse input)
-             , bench "xml-tree" (nf XML.parseXML input)
-             , bench
-                 "hexpat-sax"
-                 (nf
-                    ((Hexpat.parseThrowing Hexpat.defaultParseOptions :: L.ByteString -> [Hexpat.SAXEvent ByteString ByteString]) .
-                     L.fromStrict)
-                    input)
-             ,  bench
-                  "hexpat-tree"
-                  (nf
-                     ((HexpatTree.parse' HexpatTree.defaultParseOptions :: ByteString -> Either HexpatTree.XMLParseError (HexpatTree.Node ByteString ByteString))
-                      )
-                     input)
+             [ bgroup "hexml" [bench "tree" (whnf Hexml.parse input)]
+             , bgroup
+                 "xeno"
+                 [ bench "sax" (whnf Xeno.validate input)
+                 , bench "tree" (whnf Xeno.Vectorize.parse input)
+                 ]
+             , bgroup
+                 "hexpat"
+                 [ bench
+                     "hexpat-sax"
+                     (nf
+                        ((Hexpat.parseThrowing Hexpat.defaultParseOptions :: L.ByteString -> [Hexpat.SAXEvent ByteString ByteString]) .
+                         L.fromStrict)
+                        input)
+                 , bench
+                     "hexpat-tree"
+                     (nf
+                        ((HexpatTree.parse' HexpatTree.defaultParseOptions :: ByteString -> Either HexpatTree.XMLParseError (HexpatTree.Node ByteString ByteString)))
+                        input)
+                 ]
              ])
     , env
         (S.readFile "data/fabricated-211kb.xml")
         (\input ->
            bgroup
              "211KB"
-             [ bench "hexml-tree" (whnf Hexml.parse input)
-             , bench "xeno-sax" (whnf Xeno.validate input)
-             , bench "xeno-vectorize" (whnf Xeno.Vectorize.parse input)
-             , bench "xml-tree" (nf XML.parseXML input)
-             , bench
-                 "hexpat-sax"
-                 (nf
-                    ((Hexpat.parseThrowing Hexpat.defaultParseOptions :: L.ByteString -> [Hexpat.SAXEvent ByteString ByteString]) .
-                     L.fromStrict)
-                    input)
-             ,  bench
-                  "hexpat-tree"
-                  (nf
-                     ((HexpatTree.parse' HexpatTree.defaultParseOptions :: ByteString -> Either HexpatTree.XMLParseError (HexpatTree.Node ByteString ByteString))
-                      )
-                     input)
+             [ bgroup "hexml" [bench "tree" (whnf Hexml.parse input)]
+             , bgroup
+                 "xeno"
+                 [ bench "sax" (whnf Xeno.validate input)
+                 , bench "tree" (whnf Xeno.Vectorize.parse input)
+                 ]
+             , bgroup
+                 "hexpat"
+                 [ bench
+                     "hexpat-sax"
+                     (nf
+                        ((Hexpat.parseThrowing Hexpat.defaultParseOptions :: L.ByteString -> [Hexpat.SAXEvent ByteString ByteString]) .
+                         L.fromStrict)
+                        input)
+                 , bench
+                     "hexpat-tree"
+                     (nf
+                        ((HexpatTree.parse' HexpatTree.defaultParseOptions :: ByteString -> Either HexpatTree.XMLParseError (HexpatTree.Node ByteString ByteString)))
+                        input)
+                 ]
              ])
     ]
 
