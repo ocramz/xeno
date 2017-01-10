@@ -30,7 +30,7 @@ data ByteArray = ByteArray ByteArray#
 
 -- | A helper function, not efficient. For debugging.
 byteArrayToIntVectorDebug :: ByteArray -> Int -> Vector Int
-byteArrayToIntVectorDebug _ count | count < 0 = error "Negative count"
+byteArrayToIntVectorDebug _ count | count < 0 = error "byteArrayToIntVectorDebug: Negative count"
 byteArrayToIntVectorDebug (ByteArray x) count =
   V.fromList (reverse (go (count - 1)))
   where go 0 = [(I# (indexIntArray# x 0#))]
@@ -38,6 +38,7 @@ byteArrayToIntVectorDebug (ByteArray x) count =
 
 -- | Resize the array, with the original contents preserved.
 resizeMutableByteArray :: MutableByteArray s -> Int -> ST s (MutableByteArray s)
+resizeMutableByteArray _ i | i < 0 = error "resizeMutableByteArray: negative size"
 resizeMutableByteArray (MutableByteArray a) (I# size) =
   ST (\s ->
     case resizeMutableByteArray# a (size *# 4#) s of
@@ -51,6 +52,7 @@ intArraySize (MutableByteArray a) = div (I# (sizeofMutableByteArray# a)) 4
 
 -- | Create a mutable array of the given size.
 newMutableIntArray :: Int -> ST s (MutableByteArray s)
+newMutableIntArray i | i < 0 = error "newMutableIntArray: negative size"
 newMutableIntArray (I# size) =
   ST
     (\s ->
@@ -60,29 +62,20 @@ newMutableIntArray (I# size) =
 
 -- | Read from the array like an integer array.
 readIntArray :: MutableByteArray s -> Int -> ST s Int
-readIntArray (MutableByteArray  a) (I# i) =
-  ST (\s -> case readInt32Array# a i s of
-     (# s', v #) -> (# s', I# v #))
-
--- readIntArray (MutableByteArray size a) !i'@(I# i) =
---   if i' >= 0 && i' < I# size
---      then ST (\s -> case readInt64Array# a i s of
---            (# s', v #) -> (# s', I# v #))
---      else error ("readIntArray: Index out of bounds! " ++ show i')
+readIntArray arr@(MutableByteArray  a) index@(I# i) =
+  if index >=0 && index < intArraySize arr
+     then ST (\s -> case readInt32Array# a i s of
+             (# s', v #) -> (# s', I# v #))
+     else error "readIntArray: index out of bounds"
 {-# INLINE readIntArray #-}
 
 -- | Write to the array like an integer array.
 writeIntArray :: MutableByteArray s -> Int -> Int -> ST s ()
-
-writeIntArray (MutableByteArray  a) (I# i) (I# v) =
-  ST (\s -> case writeInt32Array# a i v s of
-              s' -> (# s', () #))
-
--- writeIntArray (MutableByteArray size a) !i'@(I# i) !(I# v) =
---   if i' >= 0 && i' < size
---      then ST (\s -> case writeInt64Array# a i v s of
---               s' -> (# s', () #))
---      else error ("writeIntArray: Index out of bounds! " ++ show i')
+writeIntArray arr@(MutableByteArray  a) index@(I# i) (I# v) =
+  if index >=0 && index < intArraySize arr
+     then ST (\s -> case writeInt32Array# a i v s of
+                      s' -> (# s', () #))
+     else error "writeIntArray: index out of bounds"
 {-# INLINE writeIntArray #-}
 
 -- | Convert a mutable array to a immutable array.

@@ -4,9 +4,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE BangPatterns #-}
 
--- | Test XML parser.
+-- | SAX-style XML parser.
 
-module Xeno
+module Xeno.SAX
   ( process
   , fold
   , validate

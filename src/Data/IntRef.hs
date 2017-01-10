@@ -8,7 +8,6 @@
 module Data.IntRef where
 
 import Data.MutableByteArray
-
 import           GHC.ST
 
 newtype IntRef s = IntRef (MutableByteArray s)

@@ -17,8 +17,8 @@ import qualified Text.XML.Expat.SAX as Hexpat
 import qualified Text.XML.Expat.Tree as HexpatTree
 import qualified Text.XML.Hexml as Hexml
 import           Text.XML.Light
-import qualified Xeno
-import qualified Xeno.Vectorize
+import qualified Xeno.SAX
+import qualified Xeno.DOM
 
 main :: IO ()
 main =
@@ -31,8 +31,8 @@ main =
              [ bgroup "hexml" [bench "tree" (whnf Hexml.parse input)]
              , bgroup
                  "xeno"
-                 [ bench "sax" (whnf Xeno.validate input)
-                 , bench "tree" (whnf Xeno.Vectorize.parse input)
+                 [ bench "sax" (whnf Xeno.SAX.validate input)
+                 , bench "tree" (whnf Xeno.DOM.parse input)
                  ]
              , bgroup
                  "hexpat"
@@ -57,8 +57,8 @@ main =
              [ bgroup "hexml" [bench "tree" (whnf Hexml.parse input)]
              , bgroup
                  "xeno"
-                 [ bench "sax" (whnf Xeno.validate input)
-                 , bench "tree" (whnf Xeno.Vectorize.parse input)
+                 [ bench "sax" (whnf Xeno.SAX.validate input)
+                 , bench "tree" (whnf Xeno.DOM.parse input)
                  ]
              , bgroup
                  "hexpat"
@@ -83,8 +83,8 @@ main =
              [ bgroup "hexml" [bench "tree" (whnf Hexml.parse input)]
              , bgroup
                  "xeno"
-                 [ bench "sax" (whnf Xeno.validate input)
-                 , bench "tree" (whnf Xeno.Vectorize.parse input)
+                 [ bench "sax" (whnf Xeno.SAX.validate input)
+                 , bench "tree" (whnf Xeno.DOM.parse input)
                  ]
              , bgroup
                  "hexpat"

@@ -13,7 +13,7 @@ import           Data.Vector.Unboxed (Vector)
 import qualified Data.Vector.Unboxed as V
 import qualified Data.Vector.Unboxed.Mutable as UMV
 import qualified Data.Vector.Unboxed as UV
-import           Xeno
+import           Xeno.SAX
 
 parse :: ByteString -> UV.Vector Int
 parse str =
