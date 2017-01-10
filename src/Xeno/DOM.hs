@@ -1,17 +1,6 @@
-{-# LANGUAGE MagicHash #-}
-{-# LANGUAGE UnboxedTuples #-}
-{-# LANGUAGE BangPatterns #-}
-
-{-# LANGUAGE BangPatterns #-}
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 -- | Using the SAX parser, provide a DOM interface.
 
-module Xeno.Vectorize where
+module Xeno.DOM where
 
 import           Control.Monad.ST
 import           Data.ByteString (ByteString)
