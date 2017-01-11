@@ -22,7 +22,7 @@ The [hexml](https://github.com/ndmitchell/hexml) Haskell library uses
 an XML parser written in C, so that is the baseline we're trying to
 beat or match roughly.
 
-[Imgur](http://i.imgur.com/XgdZoQ9.png)
+![Imgur](http://i.imgur.com/XgdZoQ9.png)
 
 The `Xeno.SAX` module is faster than Hexml for simply walking the
 document. Hexml actually does more work, allocating a DOM. `Xeno.DOM`
