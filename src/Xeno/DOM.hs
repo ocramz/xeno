@@ -59,10 +59,12 @@ children (Node str start offsets) = collect firstChild
       | otherwise = []
     firstChild = go (start + 5)
       where
-        go i =
-          case offsets ! i of
-            0x02 -> go (i + 5)
-            _ -> i
+        go i
+          | i < endBoundary =
+            case offsets ! i of
+              0x02 -> go (i + 5)
+              _ -> i
+          | otherwise = i
     endBoundary = offsets ! (start + 4)
 
 -- | Contents of a node.
@@ -83,10 +85,11 @@ contents (Node str start offsets) = collect firstChild
       | otherwise = []
     firstChild = go (start + 5)
       where
-        go i =
+        go i | i < endBoundary =
           case offsets ! i of
             0x02 -> go (i + 5)
             _ -> i
+          | otherwise = i
     endBoundary = offsets ! (start + 4)
 
 -- | Attributes of a node.
