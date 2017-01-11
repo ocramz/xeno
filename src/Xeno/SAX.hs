@@ -13,14 +13,16 @@ module Xeno.SAX
   , dump
   ) where
 
+import           Control.Exception
 import           Control.Monad.State.Strict
 import           Control.Spoon
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
-import qualified Data.ByteString.Unsafe as SU
 import qualified Data.ByteString.Char8 as S8
+import qualified Data.ByteString.Unsafe as SU
 import           Data.Functor.Identity
 import           Data.Monoid
+import           Data.Typeable
 import           Data.Word
 
 --------------------------------------------------------------------------------
@@ -29,7 +31,8 @@ import           Data.Word
 -- | Parse the XML but return no result, process no events.
 validate :: ByteString -> Bool
 validate s =
-  case teaspoon
+  case teaspoonWithHandles
+         [Handler (\(_ :: XenoException) -> pure Nothing)]
          (runIdentity
             (process
                (\_ -> pure ())
@@ -118,7 +121,7 @@ process openF attrF endOpenF textF closeF str = findLT 0
         this = S.drop index str
     findCommentEnd index =
       case elemIndexFrom commentChar str index of
-        Nothing -> error "Couldn't find comment closing '-->' characters."
+        Nothing -> throw XenoParseError
         Just fromDash ->
           if s_index this 0 == commentChar && s_index this 1 == closeTagChar
             then findLT (fromDash + 2)
@@ -128,7 +131,7 @@ process openF attrF endOpenF textF closeF str = findLT 0
       let spaceOrCloseTag = parseName str index
       in if | s_index str index0 == questionChar ->
               case elemIndexFrom closeTagChar str spaceOrCloseTag of
-                Nothing -> error "Couldn't find matching '>' character."
+                Nothing -> throw XenoParseError
                 Just fromGt -> do
                   findLT (fromGt + 1)
             | s_index str spaceOrCloseTag == closeTagChar ->
@@ -171,8 +174,7 @@ process openF attrF endOpenF textF closeF str = findLT 0
                                                str
                                                (quoteIndex + 1) of
                                           Nothing ->
-                                            error
-                                              "Expecting matching ' or \" to close attribute value."
+                                            throw XenoParseError
                                           Just endQuoteIndex -> do
                                             attrF
                                               (substring str index afterAttrName)
@@ -181,9 +183,8 @@ process openF attrF endOpenF textF closeF str = findLT 0
                                                  (quoteIndex + 1)
                                                  (endQuoteIndex))
                                             findAttributes (endQuoteIndex + 1)
-                                   else error
-                                          "Expecting ' or \" for attribute value, after '='."
-                         else error ("Expecting '=' after attribute name, but got: " ++ show (S.take 100 (S.drop afterAttrName str)))
+                                   else throw XenoParseError
+                         else throw XenoParseError
       where
         index = skipSpaces str index0
 {-# INLINE process #-}
@@ -205,12 +206,14 @@ process openF attrF endOpenF textF closeF str = findLT 0
 --------------------------------------------------------------------------------
 -- ByteString utilities
 
+data XenoException = XenoStringIndexProblem | XenoParseError deriving (Show, Typeable)
+instance Exception XenoException where displayException = show
+
 -- | /O(1)/ 'ByteString' index (subscript) operator, starting from 0.
 s_index :: ByteString -> Int -> Word8
 s_index ps n
-    | n < 0          = error ("negative index: " ++ show n)
-    | n >= S.length ps = error ("index too large: " ++ show n
-                                   ++ ", length = " ++ show (S.length ps))
+    | n < 0          = throw XenoStringIndexProblem
+    | n >= S.length ps = throw XenoStringIndexProblem
     | otherwise      = ps `SU.unsafeIndex` n
 {-# INLINE s_index #-}
 
