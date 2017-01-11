@@ -22,8 +22,8 @@ import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Unsafe as SU
 import           Data.Functor.Identity
 import           Data.Monoid
-import           Data.Typeable
 import           Data.Word
+import           Xeno.Types
 
 --------------------------------------------------------------------------------
 -- Helpful interfaces to the parser
@@ -205,9 +205,6 @@ process openF attrF endOpenF textF closeF str = findLT 0
 
 --------------------------------------------------------------------------------
 -- ByteString utilities
-
-data XenoException = XenoStringIndexProblem | XenoParseError deriving (Show, Typeable)
-instance Exception XenoException where displayException = show
 
 -- | /O(1)/ 'ByteString' index (subscript) operator, starting from 0.
 s_index :: ByteString -> Int -> Word8
