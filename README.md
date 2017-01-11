@@ -22,6 +22,8 @@ The [hexml](https://github.com/ndmitchell/hexml) Haskell library uses
 an XML parser written in C, so that is the baseline we're trying to
 beat or match roughly.
 
+[Imgur](http://i.imgur.com/XgdZoQ9.png)
+
 The `Xeno.SAX` module is faster than Hexml for simply walking the
 document. Hexml actually does more work, allocating a DOM. `Xeno.DOM`
 is slighly slower or faster than Hexml depending on the document,
@@ -41,8 +43,6 @@ I memory benchmarked Hexml, but most of its allocation happens in C,
 which GHC doesn't track. So the data wasn't useful to compare.
 
 Speed benchmarks:
-
-[Imgur](http://i.imgur.com/XgdZoQ9.png)
 
     benchmarking 4KB/hexml/dom
     time                 6.317 μs   (6.279 μs .. 6.354 μs)
@@ -109,7 +109,7 @@ Speed benchmarks:
 Easy as running the parse function:
 
 ``` haskell
- parse "<p key='val' x=\"foo\" k=\"\"><a><hr/>hi</a><b>sup</b>hi</p>"
+> parse "<p key='val' x=\"foo\" k=\"\"><a><hr/>hi</a><b>sup</b>hi</p>"
 (Node
    "p"
    [("key", "val"), ("x", "foo"), ("k", "")]
