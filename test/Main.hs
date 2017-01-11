@@ -39,7 +39,7 @@ hexml_examples_sax =
     ,(True, "<test /><close />")
     ,(True, "<test /><!-- comment > --><close />")
     ,(True, "<test id=\"bob value\" another-attr=\"test with <\">here </test> more text at the end<close />")
-    -- ,(False, "<test></more>")
+    ,(True, "<test></more>") -- SAX doesn't care about tag balancing
     ,(False, "<test")
     ,(True, "<?xml version=\"1.1\"?>\n<greeting>Hello, world!</greeting>")
     ]
