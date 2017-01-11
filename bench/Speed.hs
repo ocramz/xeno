@@ -34,7 +34,7 @@ main =
                  [ bench "sax" (whnf Xeno.SAX.validate input)
                  , bench "dom" (whnf Xeno.DOM.parse input)
                  ]
-             , bgroup
+              {-bgroup
                  "hexpat"
                  [ bench
                      "hexpat-sax"
@@ -47,7 +47,7 @@ main =
                      (nf
                         ((HexpatTree.parse' HexpatTree.defaultParseOptions :: ByteString -> Either HexpatTree.XMLParseError (HexpatTree.Node ByteString ByteString)))
                         input)
-                 ]
+                 ]-}
              ])
     , env
         (S.readFile "data/text-31kb.xml")
@@ -60,7 +60,7 @@ main =
                  [ bench "sax" (whnf Xeno.SAX.validate input)
                  , bench "dom" (whnf Xeno.DOM.parse input)
                  ]
-             , bgroup
+              {-bgroup
                  "hexpat"
                  [ bench
                      "hexpat-sax"
@@ -73,7 +73,7 @@ main =
                      (nf
                         ((HexpatTree.parse' HexpatTree.defaultParseOptions :: ByteString -> Either HexpatTree.XMLParseError (HexpatTree.Node ByteString ByteString)))
                         input)
-                 ]
+                 ]-}
              ])
     , env
         (S.readFile "data/fabricated-211kb.xml")
@@ -86,7 +86,7 @@ main =
                  [ bench "sax" (whnf Xeno.SAX.validate input)
                  , bench "dom" (whnf Xeno.DOM.parse input)
                  ]
-             , bgroup
+              {-bgroup
                  "hexpat"
                  [ bench
                      "hexpat-sax"
@@ -99,7 +99,7 @@ main =
                      (nf
                         ((HexpatTree.parse' HexpatTree.defaultParseOptions :: ByteString -> Either HexpatTree.XMLParseError (HexpatTree.Node ByteString ByteString)))
                         input)
-                 ]
+                 ]-}
              ])
     ]
 

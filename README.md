@@ -42,7 +42,7 @@ which GHC doesn't track. So the data wasn't useful to compare.
 
 Speed benchmarks:
 
-![](http://i.imgur.com/VV5gmxV.png)
+[Imgur](http://i.imgur.com/ngIYSSV.png)
 
     benchmarking 4KB/hexml/dom
     time                 6.317 μs   (6.279 μs .. 6.354 μs)
