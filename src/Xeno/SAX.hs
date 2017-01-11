@@ -14,6 +14,7 @@ module Xeno.SAX
   ) where
 
 import           Control.Monad.State.Strict
+import           Control.Spoon
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
@@ -25,15 +26,19 @@ import           Data.Word
 -- Helpful interfaces to the parser
 
 -- | Parse the XML but return no result, process no events.
-validate :: ByteString -> ()
-validate =
-  runIdentity .
-  process
-    (\_ -> pure ())
-    (\_ _ -> pure ())
-    (\_ -> pure ())
-    (\_ -> pure ())
-    (\_ -> pure ())
+validate :: ByteString -> Bool
+validate s =
+  case teaspoon
+         (runIdentity
+            (process
+               (\_ -> pure ())
+               (\_ _ -> pure ())
+               (\_ -> pure ())
+               (\_ -> pure ())
+               (\_ -> pure ())
+               s)) of
+    Nothing -> False
+    Just () -> True
 
 -- | Parse the XML and pretty print it to stdout.
 dump :: ByteString -> IO ()
