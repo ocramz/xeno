@@ -142,12 +142,12 @@ Folding over XML:
 
 ``` haskell
 > fold const (\m _ _ -> m + 1) const const const 0 input -- Count elements.
-2
+Right 2
 ```
 
 ``` haskell
 > fold (\m _ -> m + 1) (\m _ _ -> m) const const const 0 input -- Count attributes.
-3
+Right 3
 ```
 
 Most general XML processor:
