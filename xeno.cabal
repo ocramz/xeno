@@ -14,7 +14,7 @@ test-suite xeno-test
   type: exitcode-stdio-1.0
   hs-source-dirs: test
   main-is: Main.hs
-  build-depends: base, xeno, hexml, hspec
+  build-depends: base, xeno, hexml, hspec, bytestring
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   default-language: Haskell2010
 
