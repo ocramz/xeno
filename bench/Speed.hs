@@ -28,12 +28,9 @@ main =
         (\input ->
            bgroup
              "4KB"
-             [ bgroup "hexml" [bench "dom" (whnf Hexml.parse input)]
-             , bgroup
-                 "xeno"
-                 [ bench "sax" (whnf Xeno.SAX.validate input)
-                 , bench "dom" (whnf Xeno.DOM.parse input)
-                 ]
+             [ bench "hexml-dom" (whnf Hexml.parse input)
+             , bench "xeno-sax" (whnf Xeno.SAX.validate input)
+                 , bench "xeno-dom" (whnf Xeno.DOM.parse input)
               {-bgroup
                  "hexpat"
                  [ bench
@@ -54,12 +51,9 @@ main =
         (\input ->
            bgroup
              "31KB"
-             [ bgroup "hexml" [bench "dom" (whnf Hexml.parse input)]
-             , bgroup
-                 "xeno"
-                 [ bench "sax" (whnf Xeno.SAX.validate input)
-                 , bench "dom" (whnf Xeno.DOM.parse input)
-                 ]
+             [ bench "hexml-dom" (whnf Hexml.parse input)
+             , bench "xeno-sax" (whnf Xeno.SAX.validate input)
+                 , bench "xeno-dom" (whnf Xeno.DOM.parse input)
               {-bgroup
                  "hexpat"
                  [ bench
@@ -80,12 +74,9 @@ main =
         (\input ->
            bgroup
              "211KB"
-             [ bgroup "hexml" [bench "dom" (whnf Hexml.parse input)]
-             , bgroup
-                 "xeno"
-                 [ bench "sax" (whnf Xeno.SAX.validate input)
-                 , bench "dom" (whnf Xeno.DOM.parse input)
-                 ]
+             [ bench "hexml-dom" (whnf Hexml.parse input)
+             , bench "xeno-sax" (whnf Xeno.SAX.validate input)
+                 , bench "xeno-dom" (whnf Xeno.DOM.parse input)
               {-bgroup
                  "hexpat"
                  [ bench
