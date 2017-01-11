@@ -78,17 +78,18 @@ fold
   -> (s -> ByteString -> s) -- ^ Close tag.
   -> s
   -> ByteString
-  -> s
+  -> Either XenoException s
 fold openF attrF endOpenF textF closeF s str =
-  execState
-    (process
-       (\name -> modify (\s' -> openF s' name))
-       (\key value -> modify (\s' -> attrF s' key value))
-       (\name -> modify (\s' -> endOpenF s' name))
-       (\text -> modify (\s' -> textF s' text))
-       (\name -> modify (\s' -> closeF s' name))
-       str)
-    s
+  spork
+    (execState
+       (process
+          (\name -> modify (\s' -> openF s' name))
+          (\key value -> modify (\s' -> attrF s' key value))
+          (\name -> modify (\s' -> endOpenF s' name))
+          (\text -> modify (\s' -> textF s' text))
+          (\name -> modify (\s' -> closeF s' name))
+          str)
+       s)
 
 --------------------------------------------------------------------------------
 -- Main parsing function
