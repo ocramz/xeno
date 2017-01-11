@@ -6,9 +6,11 @@ A fast event-based XML parser.
 
 * It's a SAX-style/fold parser which triggers events for open/close
   tags, attributes, text, etc.
-* It handles comments.
-* It uses very low memory (see memory benchmarks below).
+* It uses low memory (see memory benchmarks below).
 * It's very fast (see speed benchmarks below).
+* It
+  [cheats like Hexml does](http://neilmitchell.blogspot.co.uk/2016/12/new-xml-parser-hexml.html)
+  (doesn't expand entities or CDATA, or most of the XML standard).
 * It's written in pure Haskell.
 
 ## Example
