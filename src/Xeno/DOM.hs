@@ -17,6 +17,7 @@ module Xeno.DOM
 
 import           Control.DeepSeq
 import           Control.Monad.ST
+import           Control.Spork
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import           Data.ByteString.Internal (ByteString(PS))
@@ -26,6 +27,7 @@ import           Data.Vector.Unboxed ((!))
 import qualified Data.Vector.Unboxed as UV
 import qualified Data.Vector.Unboxed.Mutable as UMV
 import           Xeno.SAX
+import           Xeno.Types
 
 -- | Some XML nodes.
 data Node = Node !ByteString !Int !(UV.Vector Int)
@@ -115,12 +117,14 @@ name (Node str start offsets) =
     _ -> mempty
 
 -- | Parse a complete Nodes document.
-parse :: ByteString -> Node
+parse :: ByteString -> Either XenoException Node
 parse str =
-  (Node
-     str
-     0
-     (runST
+  case spork node of
+    Left e -> Left e
+    Right r -> Right (Node str 0 r)
+  where
+    node =
+      runST
         (do nil <- UMV.new 1000
             vecRef <- newSTRef nil
             sizeRef <- fmap asURef (newRef 0)
@@ -192,7 +196,7 @@ parse str =
             wet <- readSTRef vecRef
             arr <- UV.unsafeFreeze wet
             size <- readRef sizeRef
-            return (UV.unsafeSlice 0 size arr))))
+            return (UV.unsafeSlice 0 size arr))
 
 -- | Get a substring of the BS.
 substring :: ByteString -> Int -> Int -> ByteString
