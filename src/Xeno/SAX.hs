@@ -16,6 +16,7 @@ module Xeno.SAX
 import           Control.Exception
 import           Control.Monad.State.Strict
 import           Control.Spoon
+import           Control.Spork
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
@@ -31,8 +32,7 @@ import           Data.Word
 -- | Parse the XML but return no result, process no events.
 validate :: ByteString -> Bool
 validate s =
-  case teaspoonWithHandles
-         [Handler (\(_ :: XenoException) -> pure Nothing)]
+  case spork
          (runIdentity
             (process
                (\_ -> pure ())
@@ -41,8 +41,8 @@ validate s =
                (\_ -> pure ())
                (\_ -> pure ())
                s)) of
-    Nothing -> False
-    Just () -> True
+    Left (_ :: XenoException) -> False
+    Right _ -> True
 
 -- | Parse the XML and pretty print it to stdout.
 dump :: ByteString -> IO ()

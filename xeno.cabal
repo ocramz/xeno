@@ -7,7 +7,8 @@ library
   hs-source-dirs: src
   ghc-options: -Wall -O2
   exposed-modules: Xeno.SAX, Xeno.DOM
-  build-depends: base >= 4.7 && < 5, bytestring, vector, deepseq, array, mutable-containers, mtl, spoon
+  other-modules: Control.Spork
+  build-depends: base >= 4.7 && < 5, bytestring, vector, deepseq, array, mutable-containers, mtl
   default-language: Haskell2010
 
 test-suite xeno-test
