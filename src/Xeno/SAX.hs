@@ -15,7 +15,6 @@ module Xeno.SAX
 
 import           Control.Exception
 import           Control.Monad.State.Strict
-import           Control.Spoon
 import           Control.Spork
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
