@@ -110,13 +110,14 @@ Easy as running the parse function:
 
 ``` haskell
 > parse "<p key='val' x=\"foo\" k=\"\"><a><hr/>hi</a><b>sup</b>hi</p>"
-(Node
-   "p"
-   [("key", "val"), ("x", "foo"), ("k", "")]
-   [ Element (Node "a" [] [Element (Node "hr" [] []), Text "hi"])
-   , Element (Node "b" [] [Text "sup"])
-   , Text "hi"
-   ])
+Right
+  (Node
+     "p"
+     [("key", "val"), ("x", "foo"), ("k", "")]
+     [ Element (Node "a" [] [Element (Node "hr" [] []), Text "hi"])
+     , Element (Node "b" [] [Text "sup"])
+     , Text "hi"
+     ])
 ```
 
 ## SAX Example
