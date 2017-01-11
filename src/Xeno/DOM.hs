@@ -121,7 +121,10 @@ parse :: ByteString -> Either XenoException Node
 parse str =
   case spork node of
     Left e -> Left e
-    Right r -> Right (Node str 0 r)
+    Right r ->
+      case r ! 0 of
+        0x00 -> Right (Node str 0 r)
+        _ -> Left XenoExpectRootNode
   where
     node =
       runST
