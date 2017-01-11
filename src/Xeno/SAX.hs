@@ -17,6 +17,7 @@ import           Control.Monad.State.Strict
 import           Control.Spoon
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
+import qualified Data.ByteString.Unsafe as SU
 import qualified Data.ByteString.Char8 as S8
 import           Data.Functor.Identity
 import           Data.Monoid
@@ -109,8 +110,8 @@ process openF attrF endOpenF textF closeF str = findLT 0
           checkOpenComment (fromLt + 1)
           where text = substring str index fromLt
     checkOpenComment index =
-      if S.index this 0 == bangChar &&
-         S.index this 1 == commentChar && S.index this 2 == commentChar
+      if s_index this 0 == bangChar &&
+         s_index this 1 == commentChar && s_index this 2 == commentChar
         then findCommentEnd (index + 3)
         else findTagName index
       where
@@ -119,20 +120,20 @@ process openF attrF endOpenF textF closeF str = findLT 0
       case elemIndexFrom commentChar str index of
         Nothing -> error "Couldn't find comment closing '-->' characters."
         Just fromDash ->
-          if S.index this 0 == commentChar && S.index this 1 == closeTagChar
+          if s_index this 0 == commentChar && s_index this 1 == closeTagChar
             then findLT (fromDash + 2)
             else findCommentEnd (fromDash + 1)
           where this = S.drop index str
     findTagName index0 =
       let spaceOrCloseTag = parseName str index
-      in if | S.index str index0 == questionChar ->
+      in if | s_index str index0 == questionChar ->
               case elemIndexFrom closeTagChar str spaceOrCloseTag of
                 Nothing -> error "Couldn't find matching '>' character."
                 Just fromGt -> do
                   findLT (fromGt + 1)
-            | S.index str spaceOrCloseTag == closeTagChar ->
+            | s_index str spaceOrCloseTag == closeTagChar ->
               do let tagname = substring str index spaceOrCloseTag
-                 if S.index str index0 == slashChar
+                 if s_index str index0 == slashChar
                    then closeF tagname
                    else do
                      openF tagname
@@ -150,19 +151,19 @@ process openF attrF endOpenF textF closeF str = findLT 0
                      findLT (closingPair + 2)
       where
         index =
-          if S.index str index0 == slashChar
+          if s_index str index0 == slashChar
             then index0 + 1
             else index0
     findAttributes index0 =
-      if S.index str index == slashChar &&
-         S.index str (index + 1) == closeTagChar
+      if s_index str index == slashChar &&
+         s_index str (index + 1) == closeTagChar
         then pure (Left index)
-        else if S.index str index == closeTagChar
+        else if s_index str index == closeTagChar
                then pure (Right index)
                else let afterAttrName = parseName str index
-                    in if S.index str afterAttrName == equalChar
+                    in if s_index str afterAttrName == equalChar
                          then let quoteIndex = afterAttrName + 1
-                                  usedChar = S.index str quoteIndex
+                                  usedChar = s_index str quoteIndex
                               in if usedChar == quoteChar ||
                                     usedChar == doubleQuoteChar
                                    then case elemIndexFrom
@@ -204,10 +205,19 @@ process openF attrF endOpenF textF closeF str = findLT 0
 --------------------------------------------------------------------------------
 -- ByteString utilities
 
+-- | /O(1)/ 'ByteString' index (subscript) operator, starting from 0.
+s_index :: ByteString -> Int -> Word8
+s_index ps n
+    | n < 0          = error ("negative index: " ++ show n)
+    | n >= S.length ps = error ("index too large: " ++ show n
+                                   ++ ", length = " ++ show (S.length ps))
+    | otherwise      = ps `SU.unsafeIndex` n
+{-# INLINE s_index #-}
+
 -- | A fast space skipping function.
 skipSpaces :: ByteString -> Int -> Int
 skipSpaces str i =
-  if isSpaceChar (S.index str i)
+  if isSpaceChar (s_index str i)
     then skipSpaces str (i + 1)
     else i
 {-# INLINE skipSpaces #-}
@@ -220,7 +230,7 @@ substring s start end = S.take (end - start) (S.drop start s)
 -- | Basically @findIndex (not . isNameChar)@, but doesn't allocate.
 parseName :: ByteString -> Int -> Int
 parseName str index =
-  if not (isNameChar (S.index str index))
+  if not (isNameChar (s_index str index))
      then index
      else parseName str (index + 1)
 {-# INLINE parseName #-}
