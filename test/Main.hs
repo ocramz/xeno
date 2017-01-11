@@ -17,7 +17,7 @@ spec =
   describe
     "hexml tests"
     (do mapM_
-          (\(_, i) -> it (show i) (shouldBe (Xeno.SAX.validate i) ()))
+          (\(v, i) -> it (show i) (shouldBe (Xeno.SAX.validate i) v))
           hexml_examples_sax
         let doc =
               parse
@@ -40,6 +40,6 @@ hexml_examples_sax =
     ,(True, "<test /><!-- comment > --><close />")
     ,(True, "<test id=\"bob value\" another-attr=\"test with <\">here </test> more text at the end<close />")
     -- ,(False, "<test></more>")
-    -- ,(False, "<test")
+    ,(False, "<test")
     ,(True, "<?xml version=\"1.1\"?>\n<greeting>Hello, world!</greeting>")
     ]
