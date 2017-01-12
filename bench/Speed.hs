@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE StandaloneDeriving, DeriveGeneric #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -20,6 +21,9 @@ import           Text.XML.Light as XML
 import           Text.XML.Light.Input as XML
 import qualified Xeno.SAX
 import qualified Xeno.DOM
+#ifdef LIBXML2
+import qualified Text.XML.LibXML.Parser as Libxml2
+#endif
 
 main :: IO ()
 main =
@@ -44,6 +48,9 @@ main =
                     ((HexpatTree.parse' HexpatTree.defaultParseOptions :: ByteString -> Either HexpatTree.XMLParseError (HexpatTree.Node ByteString ByteString)))
                     input)
              , bench "xml-dom" (nf XML.parseXMLDoc input)
+#ifdef LIBXML2
+             , bench "libxml2-dom" (whnfIO (Libxml2.parseMemory input))
+#endif
              ])
     , env
         (S.readFile "data/text-31kb.xml")
@@ -65,6 +72,10 @@ main =
                     ((HexpatTree.parse' HexpatTree.defaultParseOptions :: ByteString -> Either HexpatTree.XMLParseError (HexpatTree.Node ByteString ByteString)))
                     input)
              , bench "xml-dom" (nf XML.parseXMLDoc input)
+#ifdef LIBXML2
+             , bench "libxml2-dom" (whnfIO (Libxml2.parseMemory input))
+
+#endif
              ])
     , env
         (S.readFile "data/fabricated-211kb.xml")
@@ -86,6 +97,9 @@ main =
                     ((HexpatTree.parse' HexpatTree.defaultParseOptions :: ByteString -> Either HexpatTree.XMLParseError (HexpatTree.Node ByteString ByteString)))
                     input)
              , bench "xml-dom" (nf XML.parseXMLDoc input)
+#ifdef LIBXML2
+             , bench "libxml2-dom" (whnfIO (Libxml2.parseMemory input))
+#endif
              ])
     ]
 
