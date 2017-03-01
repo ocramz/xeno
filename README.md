@@ -17,8 +17,6 @@ A fast event-based XML parser.
   (doesn't expand entities or CDATA, or most of the XML standard).
 * It's written in pure Haskell.
 
-This is an experimental project. Not a published package. Maintainer
-wanted. Open an issue if you'd like to claim this library.
 
 ## Performance goals
 
