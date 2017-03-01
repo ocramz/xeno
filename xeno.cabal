@@ -1,8 +1,13 @@
 name: xeno
 version: 0.1
+synopsis: A fast event-based XML parser in pure Haskell
+description: Please see README.md          
 build-type: Simple
+category: XML, Parser
 cabal-version: >=1.10
 homepage: https://github.com/ocramz/xeno
+license: BSD3
+license-file: LICENSE
 author: Christopher Done
 maintainer: Marco Zocca (zocca.marco gmail)
 tested-with:         GHC == 8.0.1

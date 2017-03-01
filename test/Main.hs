@@ -31,12 +31,12 @@ spec =
         it
           "children test"
           (shouldBe
-             (map name (children $ derp doc))
+             (map name (children $ fromRightE doc))
              ["test", "test", "b", "test", "test"])
         it
           "attributes"
           (shouldBe
-             (attributes (head (children $ derp doc)))
+             (attributes (head (children $ fromRightE doc)))
              [("id", "1"), ("extra", "2")]))
 
 hexml_examples_sax :: [(Bool, ByteString)]
@@ -52,5 +52,5 @@ hexml_examples_sax =
 
 
 -- | Horrible hack. Don't try this at home.
-derp :: Either Xeno.Types.XenoException c -> c
-derp = either (error. show) id
+fromRightE :: Either XenoException a -> a
+fromRightE = either (error. show) id
