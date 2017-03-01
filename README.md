@@ -2,6 +2,8 @@
 
 A fast event-based XML parser.
 
+[Blog post](http://chrisdone.com/posts/fast-haskell-c-parsing-xml).
+
 ## Features
 
 * It's a SAX-style/fold parser which triggers events for open/close
