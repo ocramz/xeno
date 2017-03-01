@@ -2,6 +2,9 @@ name: xeno
 version: 0
 build-type: Simple
 cabal-version: >=1.10
+homepage: https://github.com/ocramz/xeno
+author: Christopher Done
+maintainer: Marco Zocca (zocca.marco gmail)
 
 flag libxml2
   description:   Include libxml2 in the benchmarks

@@ -1,5 +1,7 @@
 # xeno
 
+[![Build Status](https://travis-ci.org/ocramz/xeno.png)](https://travis-ci.org/ocramz/xeno)
+
 A fast event-based XML parser.
 
 [Blog post](http://chrisdone.com/posts/fast-haskell-c-parsing-xml).
