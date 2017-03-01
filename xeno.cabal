@@ -1,11 +1,18 @@
 name: xeno
-version: 0
+version: 0.1
 build-type: Simple
 cabal-version: >=1.10
 homepage: https://github.com/ocramz/xeno
 author: Christopher Done
 maintainer: Marco Zocca (zocca.marco gmail)
+tested-with:         GHC == 8.0.1
+extra-source-files:  README.md
+                     CHANGELOG.markdown                                 
 
+source-repository head
+  type:     git
+  location: https://github.com/ocramz/xeno
+                     
 flag libxml2
   description:   Include libxml2 in the benchmarks
   default:       False
@@ -17,7 +24,8 @@ library
   other-modules: Control.Spork
   build-depends: base >= 4.7 && < 5
                , bytestring, vector, deepseq, array, mutable-containers, mtl
-               , hspec
+               -- , exceptions
+               -- , hspec
   default-language: Haskell2010
 
 test-suite xeno-test
@@ -25,7 +33,6 @@ test-suite xeno-test
   hs-source-dirs: test
   main-is: Main.hs
   build-depends: base, xeno, hexml, hspec, bytestring
-               , hspec
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   default-language: Haskell2010
 
