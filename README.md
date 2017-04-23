@@ -1,6 +1,6 @@
 # xeno
 
-[![Build Status](https://travis-ci.org/ocramz/xeno.png)](https://travis-ci.org/ocramz/xeno)
+[![Build Status](https://travis-ci.org/ocramz/xeno.png)](https://travis-ci.org/ocramz/xeno) [![Hackage version](https://img.shields.io/hackage/v/xeno.svg?label=Hackage)](https://hackage.haskell.org/package/xeno) [![Stackage version](https://www.stackage.org/package/xeno/badge/lts?label=Stackage)](https://www.stackage.org/package/xeno)
 
 A fast event-based XML parser.
 
