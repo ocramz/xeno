@@ -133,15 +133,7 @@ process openF attrF endOpenF textF closeF cdataF str = findLT 0
            && s_index this 5 == 84 -- T
            && s_index this 6 == 65 -- A
            && s_index this 7 == openAngleBracketChar -> -- [
-           case elemIndexFrom closeAngleBracketChar str (index + 8) of
-             Nothing -> throw (XenoParseError "Couldn't find closing angle bracket in CDATA.")
-             Just fromCloseAngleBracket ->
-               case elemIndexFrom closeAngleBracketChar str (fromCloseAngleBracket + 1) of
-                 Nothing ->
-                   throw (XenoParseError "Couldn't find second closing angle bracket in CDATA.")
-                 Just _ -> do
-                   cdataF (substring str (index + 8) fromCloseAngleBracket)
-                   findLT (fromCloseAngleBracket + 2) -- Start after ]]>
+           findCDataEnd (index + 8) (index + 8)
          | otherwise ->
            findTagName index
       where
@@ -154,6 +146,17 @@ process openF attrF endOpenF textF closeF cdataF str = findLT 0
             then findLT (fromDash + 2)
             else findCommentEnd (fromDash + 1)
           where this = S.drop index str
+    findCDataEnd cdata_start index =
+      case elemIndexFrom closeAngleBracketChar str index of
+        Nothing -> throw (XenoParseError "Couldn't find closing angle bracket for CDATA.")
+        Just fromCloseAngleBracket ->
+          if s_index str (fromCloseAngleBracket + 1) == closeAngleBracketChar
+             then do
+               cdataF (substring str cdata_start fromCloseAngleBracket)
+               findLT (fromCloseAngleBracket + 2) -- Start after ]]>
+             else
+               -- We only found one ], that means that we need to keep searching.
+               findCDataEnd cdata_start (fromCloseAngleBracket + 1)
     findTagName index0 =
       let spaceOrCloseTag = parseName str index
       in if | s_index str index0 == questionChar ->
