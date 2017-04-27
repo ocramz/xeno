@@ -40,7 +40,15 @@ spec =
           "attributes"
           (shouldBe
              (attributes (head (children $ fromRightE doc)))
-             [("id", "1"), ("extra", "2")]))
+             [("id", "1"), ("extra", "2")])
+        -- If this works without crashing we're happy.
+        let nsdoc = "<ns:tag os:attr=\"Namespaced attribute value\">Content.</ns:tag>"
+        it
+          "namespaces"
+          (shouldBe
+             (Xeno.SAX.validate nsdoc)
+             True)
+    )
 
 hexml_examples_sax :: [(Bool, ByteString)]
 hexml_examples_sax =
