@@ -153,7 +153,7 @@ process openF attrF endOpenF textF closeF cdataF str = findLT 0
           if s_index str (fromCloseAngleBracket + 1) == closeAngleBracketChar
              then do
                cdataF (substring str cdata_start fromCloseAngleBracket)
-               findLT (fromCloseAngleBracket + 2) -- Start after ]]>
+               findLT (fromCloseAngleBracket + 3) -- Start after ]]>
              else
                -- We only found one ], that means that we need to keep searching.
                findCDataEnd cdata_start (fromCloseAngleBracket + 1)

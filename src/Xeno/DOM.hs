@@ -47,7 +47,7 @@ data Content
   = Element {-# UNPACK #-}!Node
   | Text {-# UNPACK #-}!ByteString
   | CData {-# UNPACK #-}!ByteString
-  deriving (Show)
+  deriving (Eq, Show)
 
 -- | Get just element children of the node (no text).
 children :: Node -> [Node]
