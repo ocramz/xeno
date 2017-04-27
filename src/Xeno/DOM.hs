@@ -46,7 +46,8 @@ instance Show Node where
 data Content
   = Element {-# UNPACK #-}!Node
   | Text {-# UNPACK #-}!ByteString
-  deriving (Show)
+  | CData {-# UNPACK #-}!ByteString
+  deriving (Eq, Show)
 
 -- | Get just element children of the node (no text).
 children :: Node -> [Node]
@@ -82,6 +83,9 @@ contents (Node str start offsets) = collect firstChild
             collect (offsets ! (i + 4))
           0x01 ->
             Text (substring str (offsets ! (i + 1)) (offsets ! (i + 2))) :
+            collect (i + 3)
+          0x03 ->
+            CData (substring str (offsets ! (i + 1)) (offsets ! (i + 2))) :
             collect (i + 3)
           _ -> []
       | otherwise = []
@@ -195,6 +199,21 @@ parse str =
                  -- Pop the stack and return to the parent element.
                  previousParent <- UMV.read v (parent + 1)
                  writeRef parentRef previousParent)
+              (\(PS _ cdata_start cdata_len) -> do
+                 let tag = 0x03
+                 index <- readRef sizeRef
+                 v' <-
+                   do v <- readSTRef vecRef
+                      if index + 3 < UMV.length v
+                        then pure v
+                        else do
+                          v' <- UMV.grow v (UMV.length v)
+                          writeSTRef vecRef v'
+                          return v'
+                 do writeRef sizeRef (index + 3)
+                 do UMV.write v' index tag
+                    UMV.write v' (index + 1) cdata_start
+                    UMV.write v' (index + 2) cdata_len)
               str
             wet <- readSTRef vecRef
             arr <- UV.unsafeFreeze wet

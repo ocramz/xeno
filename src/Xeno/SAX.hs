@@ -39,6 +39,7 @@ validate s =
                (\_ -> pure ())
                (\_ -> pure ())
                (\_ -> pure ())
+               (\_ -> pure ())
                s)) of
     Left (_ :: XenoException) -> False
     Right _ -> True
@@ -65,6 +66,9 @@ dump str =
           let !level' = level - 2
           put level'
           lift (S8.putStrLn (S8.replicate level' ' ' <> "</" <> name <> ">")))
+       (\cdata -> do
+          level <- get
+          lift (S8.putStrLn (S8.replicate level ' ' <> "CDATA: " <> S8.pack (show cdata))))
        str)
     (0 :: Int)
 
@@ -75,10 +79,11 @@ fold
   -> (s -> ByteString -> s) -- ^ End of open tag.
   -> (s -> ByteString -> s) -- ^ Text.
   -> (s -> ByteString -> s) -- ^ Close tag.
+  -> (s -> ByteString -> s) -- ^ CDATA.
   -> s
   -> ByteString
   -> Either XenoException s
-fold openF attrF endOpenF textF closeF s str =
+fold openF attrF endOpenF textF closeF cdataF s str =
   spork
     (execState
        (process
@@ -87,6 +92,7 @@ fold openF attrF endOpenF textF closeF s str =
           (\name -> modify (\s' -> endOpenF s' name))
           (\text -> modify (\s' -> textF s' text))
           (\name -> modify (\s' -> closeF s' name))
+          (\cdata -> modify (\s' -> cdataF s' cdata))
           str)
        s)
 
@@ -101,8 +107,9 @@ process
   -> (ByteString -> m ()) -- ^ End open tag.
   -> (ByteString -> m ()) -- ^ Text.
   -> (ByteString -> m ()) -- ^ Close tag.
+  -> (ByteString -> m ()) -- ^ CDATA.
   -> ByteString -> m ()
-process openF attrF endOpenF textF closeF str = findLT 0
+process openF attrF endOpenF textF closeF cdataF str = findLT 0
   where
     findLT index =
       case elemIndexFrom openTagChar str index of
@@ -112,26 +119,49 @@ process openF attrF endOpenF textF closeF str = findLT 0
           unless (S.null text) (textF text)
           checkOpenComment (fromLt + 1)
           where text = substring str index fromLt
+    -- Find open comment, CDATA or tag name.
     checkOpenComment index =
-      if s_index this 0 == bangChar &&
-         s_index this 1 == commentChar && s_index this 2 == commentChar
-        then findCommentEnd (index + 3)
-        else findTagName index
+      if | s_index this 0 == bangChar -- !
+           && s_index this 1 == commentChar -- -
+           && s_index this 2 == commentChar -> -- -
+           findCommentEnd (index + 3)
+         | s_index this 0 == bangChar -- !
+           && s_index this 1 == openAngleBracketChar -- [
+           && s_index this 2 == 67 -- C
+           && s_index this 3 == 68 -- D
+           && s_index this 4 == 65 -- A
+           && s_index this 5 == 84 -- T
+           && s_index this 6 == 65 -- A
+           && s_index this 7 == openAngleBracketChar -> -- [
+           findCDataEnd (index + 8) (index + 8)
+         | otherwise ->
+           findTagName index
       where
         this = S.drop index str
     findCommentEnd index =
       case elemIndexFrom commentChar str index of
-        Nothing -> throw XenoParseError
+        Nothing -> throw (XenoParseError "Couldn't find the closing comment dash.")
         Just fromDash ->
           if s_index this 0 == commentChar && s_index this 1 == closeTagChar
             then findLT (fromDash + 2)
             else findCommentEnd (fromDash + 1)
           where this = S.drop index str
+    findCDataEnd cdata_start index =
+      case elemIndexFrom closeAngleBracketChar str index of
+        Nothing -> throw (XenoParseError "Couldn't find closing angle bracket for CDATA.")
+        Just fromCloseAngleBracket ->
+          if s_index str (fromCloseAngleBracket + 1) == closeAngleBracketChar
+             then do
+               cdataF (substring str cdata_start fromCloseAngleBracket)
+               findLT (fromCloseAngleBracket + 3) -- Start after ]]>
+             else
+               -- We only found one ], that means that we need to keep searching.
+               findCDataEnd cdata_start (fromCloseAngleBracket + 1)
     findTagName index0 =
       let spaceOrCloseTag = parseName str index
       in if | s_index str index0 == questionChar ->
               case elemIndexFrom closeTagChar str spaceOrCloseTag of
-                Nothing -> throw XenoParseError
+                Nothing -> throw (XenoParseError "Couldn't find the end of the tag.")
                 Just fromGt -> do
                   findLT (fromGt + 1)
             | s_index str spaceOrCloseTag == closeTagChar ->
@@ -174,7 +204,7 @@ process openF attrF endOpenF textF closeF str = findLT 0
                                                str
                                                (quoteIndex + 1) of
                                           Nothing ->
-                                            throw XenoParseError
+                                            throw (XenoParseError "Couldn't find the matching quote character.")
                                           Just endQuoteIndex -> do
                                             attrF
                                               (substring str index afterAttrName)
@@ -183,8 +213,8 @@ process openF attrF endOpenF textF closeF str = findLT 0
                                                  (quoteIndex + 1)
                                                  (endQuoteIndex))
                                             findAttributes (endQuoteIndex + 1)
-                                   else throw XenoParseError
-                         else throw XenoParseError
+                                   else throw (XenoParseError ("Expected ' or \", got: " <> S.singleton usedChar))
+                         else throw (XenoParseError ("Expected =, got: " <> S.singleton (s_index str afterAttrName) <> " at character index: " <> (S8.pack . show) afterAttrName))
       where
         index = skipSpaces str index0
 {-# INLINE process #-}
@@ -193,14 +223,16 @@ process openF attrF endOpenF textF closeF str = findLT 0
                    (ByteString -> ByteString -> Identity ()) ->
                      (ByteString -> Identity ()) ->
                        (ByteString -> Identity ()) ->
-                         (ByteString -> Identity ()) -> ByteString -> Identity ()
+                         (ByteString -> Identity ()) ->
+                           (ByteString -> Identity ()) -> ByteString -> Identity ()
                #-}
 {-# SPECIALISE process ::
                  (ByteString -> IO ()) ->
                    (ByteString -> ByteString -> IO ()) ->
                      (ByteString -> IO ()) ->
                        (ByteString -> IO ()) ->
-                         (ByteString -> IO ()) -> ByteString -> IO ()
+                         (ByteString -> IO ()) ->
+                           (ByteString -> IO ()) -> ByteString -> IO ()
                #-}
 
 --------------------------------------------------------------------------------
@@ -280,7 +312,7 @@ slashChar = 47
 bangChar :: Word8
 bangChar = 33
 
--- | Open tag character.
+-- | The dash character.
 commentChar :: Word8
 commentChar = 45 -- '-'
 
@@ -291,3 +323,11 @@ openTagChar = 60 -- '<'
 -- | Close tag character.
 closeTagChar :: Word8
 closeTagChar = 62 -- '>'
+
+-- | Open angle bracket character.
+openAngleBracketChar :: Word8
+openAngleBracketChar = 91
+
+-- | Close angle bracket character.
+closeAngleBracketChar :: Word8
+closeAngleBracketChar = 93

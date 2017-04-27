@@ -25,6 +25,9 @@ spec =
     (do mapM_
           (\(v, i) -> it (show i) (shouldBe (Xeno.SAX.validate i) v))
           hexml_examples_sax
+        mapM_
+          (\(v, i) -> it (show i) (shouldBe (either (Left . show) (Right . id) (contents <$> Xeno.DOM.parse i)) v))
+          cdata_tests
         let doc =
               parse
                 "<root><test id=\"1\" extra=\"2\" />\n<test id=\"2\" /><b><test id=\"3\" /></b><test id=\"4\" /><test /></root>"
@@ -50,6 +53,17 @@ hexml_examples_sax =
     ,(True, "<?xml version=\"1.1\"?>\n<greeting>Hello, world!</greeting>")
     ]
 
+-- | We want to make sure that the parser doesn't jump out of the CDATA
+-- area prematurely because it encounters a single ].
+cdata_tests :: [(Either a [Content], ByteString)]
+cdata_tests =
+    [ ( Right [CData "Oneliner CDATA."]
+      , "<test><![CDATA[Oneliner CDATA.]]></test>")
+    , ( Right [CData "<strong>This is strong but not XML tags.</strong>"]
+      , "<test><![CDATA[<strong>This is strong but not XML tags.</strong>]]></test>")
+    , ( Right [CData "A lonely ], sad isn't it?"]
+      , "<test><![CDATA[A lonely ], sad isn't it?]]></test>")
+    ]
 
 -- | Horrible hack. Don't try this at home.
 fromRightE :: Either XenoException a -> a
