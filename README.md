@@ -14,8 +14,9 @@ A fast event-based XML parser.
 * It's very fast (see speed benchmarks below).
 * It
   [cheats like Hexml does](http://neilmitchell.blogspot.co.uk/2016/12/new-xml-parser-hexml.html)
-  (doesn't expand entities or CDATA, or most of the XML standard).
+  (doesn't expand entities, or most of the XML standard).
 * It's written in pure Haskell.
+* CDATA is supported now.
 
 
 ## Performance goals
