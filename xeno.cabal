@@ -12,7 +12,8 @@ author: Christopher Done
 maintainer: Marco Zocca (zocca.marco gmail)
 tested-with:         GHC == 8.0.1
 extra-source-files:  README.md
-                     CHANGELOG.markdown                                 
+                     CHANGELOG.markdown
+                     CONTRIBUTORS.md                             
 
 source-repository head
   type:     git
