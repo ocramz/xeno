@@ -16,7 +16,7 @@ A fast event-based XML parser.
   [cheats like Hexml does](http://neilmitchell.blogspot.co.uk/2016/12/new-xml-parser-hexml.html)
   (doesn't expand entities, or most of the XML standard).
 * It's written in pure Haskell.
-* CDATA is supported now.
+* CDATA is supported as of version 0.2.
 
 
 ## Performance goals
