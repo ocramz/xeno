@@ -9,11 +9,6 @@ import           Test.Hspec
 import           Xeno.SAX
 import           Xeno.DOM
 import           Xeno.Types
--- import Control.Monad.Catch
-
-import Data.Either
-
--- main = print "hello!"
 
 main :: IO ()
 main = hspec spec
