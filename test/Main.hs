@@ -19,7 +19,7 @@ spec =
     "hexml tests"
     (do mapM_
           (\(v, i) -> it (show i) (shouldBe (Xeno.SAX.validate i) v))
-          hexml_examples_sax
+          (hexml_examples_sax  ++ extra_examples_sax)
         mapM_
           (\(v, i) -> it (show i) (shouldBe (either (Left . show) (Right . id) (contents <$> Xeno.DOM.parse i)) v))
           cdata_tests
@@ -54,6 +54,13 @@ hexml_examples_sax =
     ,(True, "<test></more>") -- SAX doesn't care about tag balancing
     ,(False, "<test")
     ,(True, "<?xml version=\"1.1\"?>\n<greeting>Hello, world!</greeting>")
+    ]
+
+extra_examples_sax :: [(Bool, ByteString)]
+extra_examples_sax =
+    [(True, "<some-example/>")
+    ,(True, "<a numeric1=\"attribute\"/>")
+    ,(True, "<also.a.dot></also.a.dot>")
     ]
 
 -- | We want to make sure that the parser doesn't jump out of the CDATA
