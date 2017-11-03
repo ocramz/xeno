@@ -126,10 +126,18 @@ parse str =
   case spork node of
     Left e -> Left e
     Right r ->
-      case r ! 0 of
-        0x00 -> Right (Node str 0 r)
-        _ -> Left XenoExpectRootNode
+      case findRootNode r of
+        Just n -> Right n
+        Nothing -> Left XenoExpectRootNode
   where
+    findRootNode r = go 0
+      where
+        go n = case r UV.!? n of
+          Just 0x0 -> Just (Node str n r)
+          -- skipping text assuming that it contains only white space
+          -- characters
+          Just 0x1 -> go (n+3)
+          _ -> Nothing
     node =
       runST
         (do nil <- UMV.new 1000

@@ -36,6 +36,12 @@ spec =
           (shouldBe
              (attributes (head (children $ fromRightE doc)))
              [("id", "1"), ("extra", "2")])
+
+        it "xml prologue test" $ do
+          let docWithPrologue = "<?xml version=\"1.1\"?>\n<greeting>Hello, world!</greeting>"
+              parsedRoot = fromRightE $ Xeno.DOM.parse docWithPrologue
+          name parsedRoot `shouldBe` "greeting"
+
         -- If this works without crashing we're happy.
         let nsdoc = "<ns:tag os:attr=\"Namespaced attribute value\">Content.</ns:tag>"
         it
