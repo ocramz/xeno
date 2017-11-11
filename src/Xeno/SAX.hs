@@ -265,7 +265,6 @@ parseName str index =
   if not (isNameChar1 (s_index str index))
      then index
      else parseName' str (index + 1)
-{-# INLINE parseName #-}
 
 -- | Basically @findIndex (not . isNameChar)@, but doesn't allocate.
 parseName' :: ByteString -> Int -> Int
