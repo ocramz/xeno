@@ -1,9 +1,10 @@
-resolver: lts-7.14
+resolver: lts-7.24
 packages:
 - .
 - location:
     git: https://github.com/chrisdone/hexml.git
     commit: 22923b55ca7390f1973ddfd0d0e517f13cf8a8a4
+  extra-dep: True
 extra-deps:
 - hexpat-0.20.9
 - List-0.5.2

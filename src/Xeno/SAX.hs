@@ -262,10 +262,17 @@ substring s start end = S.take (end - start) (S.drop start s)
 -- | Basically @findIndex (not . isNameChar)@, but doesn't allocate.
 parseName :: ByteString -> Int -> Int
 parseName str index =
+  if not (isNameChar1 (s_index str index))
+     then index
+     else parseName' str (index + 1)
+
+-- | Basically @findIndex (not . isNameChar)@, but doesn't allocate.
+parseName' :: ByteString -> Int -> Int
+parseName' str index =
   if not (isNameChar (s_index str index))
      then index
-     else parseName str (index + 1)
-{-# INLINE parseName #-}
+     else parseName' str (index + 1)
+{-# INLINE parseName' #-}
 
 -- | Get index of an element starting from offset.
 elemIndexFrom :: Word8 -> ByteString -> Int -> Maybe Int
@@ -282,10 +289,19 @@ isSpaceChar :: Word8 -> Bool
 isSpaceChar c = c == 32 || (c <= 10 && c >= 9) || c == 13
 {-# INLINE isSpaceChar #-}
 
--- | Is the character a valid tag name constituent?
+-- | Is the character a valid first tag/attribute name constituent?
+-- 'a'-'z', 'A'-'Z', '_', ':'
+isNameChar1 :: Word8 -> Bool
+isNameChar1 c =
+  (c >= 97 && c <= 122) || (c >= 65 && c <= 90) || c == 95 || c == 58
+{-# INLINE isNameChar1 #-}
+
+-- | Is the character a valid tag/attribute name constituent?
+-- isNameChar1 + '-', '.', '0'-'9'
 isNameChar :: Word8 -> Bool
 isNameChar c =
-  (c >= 97 && c <= 122) || (c >= 65 && c <= 90) || c == 95 || c == 45 || c == 58
+  (c >= 97 && c <= 122) || (c >= 65 && c <= 90) || c == 95 || c == 58 ||
+  c == 45 || c == 46 || (c >= 48 && c <= 57)
 {-# INLINE isNameChar #-}
 
 -- | Char for '\''.
