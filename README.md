@@ -187,3 +187,8 @@ fold openF attrF endOpenF textF closeF s str =
 The `process` is marked as INLINE, which means use-sites of it will
 inline, and your particular monad's type will be potentially erased
 for great performance.
+
+
+## Contributors
+
+See CONTRIBUTORS.md

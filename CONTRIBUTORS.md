@@ -7,5 +7,6 @@ Current maintainer : Marco Zocca ( ocramz )
 ## In chronological order :
 
 Andreas Ekeroot ( Rembane )
+Kirill Zaborsky ( qrilka )
 
 
