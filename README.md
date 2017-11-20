@@ -18,6 +18,8 @@ A fast event-based XML parser.
 * It's written in pure Haskell.
 * CDATA is supported as of version 0.2.
 
+Please see the bottom of this file for guidelines on contributing to this library.
+
 
 ## Performance goals
 
@@ -192,3 +194,8 @@ for great performance.
 ## Contributors
 
 See CONTRIBUTORS.md
+
+
+## Contribution guidelines
+
+All contributions and bug fixes are welcome and will be credited appropriately, as long as they are aligned with the goals of this library: speed and memory efficiency. In practical terms, patches and additional features should not introduce significant performance regressions.
