@@ -5,6 +5,7 @@
 module Main where
 
 import           Data.ByteString (ByteString)
+import qualified Data.ByteString as BS
 import           Test.Hspec
 import           Xeno.SAX
 import           Xeno.DOM
@@ -41,6 +42,11 @@ spec =
           let docWithPrologue = "<?xml version=\"1.1\"?>\n<greeting>Hello, world!</greeting>"
               parsedRoot = fromRightE $ Xeno.DOM.parse docWithPrologue
           name parsedRoot `shouldBe` "greeting"
+
+        it "DOM from bytestring substring" $ do
+          let substr = BS.drop 5 "5<8& <valid>xml<here/></valid>"
+              parsedRoot = fromRightE $ Xeno.DOM.parse substr
+          name parsedRoot `shouldBe` "valid"
 
         -- If this works without crashing we're happy.
         let nsdoc = "<ns:tag os:attr=\"Namespaced attribute value\">Content.</ns:tag>"

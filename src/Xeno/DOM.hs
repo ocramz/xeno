@@ -138,6 +138,7 @@ parse str =
           -- characters
           Just 0x1 -> go (n+3)
           _ -> Nothing
+    PS _ offset0 _ = str
     node =
       runST
         (do nil <- UMV.new 1000
@@ -162,7 +163,7 @@ parse str =
                     writeRef sizeRef (index + 5)
                  do UMV.write v' index tag
                     UMV.write v' (index + 1) tag_parent
-                    UMV.write v' (index + 2) name_start
+                    UMV.write v' (index + 2) (name_start - offset0)
                     UMV.write v' (index + 3) name_len
                     UMV.write v' (index + 4) tag_end)
               (\(PS _ key_start key_len) (PS _ value_start value_len) -> do
@@ -178,9 +179,9 @@ parse str =
                  let tag = 0x02
                  do writeRef sizeRef (index + 5)
                  do UMV.write v' index tag
-                    UMV.write v' (index + 1) key_start
+                    UMV.write v' (index + 1) (key_start - offset0)
                     UMV.write v' (index + 2) key_len
-                    UMV.write v' (index + 3) value_start
+                    UMV.write v' (index + 3) (value_start - offset0)
                     UMV.write v' (index + 4) value_len)
               (\_ -> return ())
               (\(PS _ text_start text_len) -> do
@@ -196,7 +197,7 @@ parse str =
                           return v'
                  do writeRef sizeRef (index + 3)
                  do UMV.write v' index tag
-                    UMV.write v' (index + 1) text_start
+                    UMV.write v' (index + 1) (text_start - offset0)
                     UMV.write v' (index + 2) text_len)
               (\_ -> do
                  v <- readSTRef vecRef
@@ -220,7 +221,7 @@ parse str =
                           return v'
                  do writeRef sizeRef (index + 3)
                  do UMV.write v' index tag
-                    UMV.write v' (index + 1) cdata_start
+                    UMV.write v' (index + 1) (cdata_start - offset0)
                     UMV.write v' (index + 2) cdata_len)
               str
             wet <- readSTRef vecRef
