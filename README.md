@@ -8,14 +8,14 @@ A fast event-based XML parser.
 
 ## Features
 
-* It's a SAX-style/fold parser which triggers events for open/close
+* SAX-style/fold parser which triggers events for open/close
   tags, attributes, text, etc.
-* It uses low memory (see memory benchmarks below).
-* It's very fast (see speed benchmarks below).
+* Low memory use (see memory benchmarks below).
+* Very fast (see speed benchmarks below).
 * It
   [cheats like Hexml does](http://neilmitchell.blogspot.co.uk/2016/12/new-xml-parser-hexml.html)
   (doesn't expand entities, or most of the XML standard).
-* It's written in pure Haskell.
+* Written in pure Haskell.
 * CDATA is supported as of version 0.2.
 
 Please see the bottom of this file for guidelines on contributing to this library.
