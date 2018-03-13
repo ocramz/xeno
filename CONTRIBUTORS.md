@@ -1,12 +1,13 @@
 # Contributors
 
-Original author : Chris Done ( chrisdone )
+Author : Chris Done ( chrisdone )
 
-Current maintainer : Marco Zocca ( ocramz )
+Maintainer : Marco Zocca ( ocramz )
 
 ## In chronological order :
 
 Andreas Ekeroot ( Rembane )
+
 Kirill Zaborsky ( qrilka )
 
 

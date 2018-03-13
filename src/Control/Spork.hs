@@ -8,7 +8,7 @@ module Control.Spork
 import Control.Exception
 import System.IO.Unsafe
 
--- | Evaluate a and return left if it throws an pure exception.
+-- | Evaluate `a` and return left if it throws a pure exception.
 spork
   :: Exception e
   => a -> Either e a
