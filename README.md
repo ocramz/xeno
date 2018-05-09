@@ -147,12 +147,12 @@ Quickly dumping XML:
 Folding over XML:
 
 ``` haskell
-> fold const (\m _ _ -> m + 1) const const const 0 input -- Count elements.
+> fold const (\m _ _ -> m + 1) const const const const 0 input -- Count attributes.
 Right 2
 ```
 
 ``` haskell
-> fold (\m _ -> m + 1) (\m _ _ -> m) const const const 0 input -- Count attributes.
+> fold (\m _ -> m + 1) (\m _ _ -> m) const const const const 0 input -- Count elements.
 Right 3
 ```
 
