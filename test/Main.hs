@@ -46,7 +46,7 @@ spec = do
     "hexml tests"
     (do mapM_
           (\(v, i) -> it (show i) (shouldBe (validate i) v))
-          (hexml_examples_sax  ++ extra_examples_sax)
+          (hexml_examples_sax  ++ extra_examples_sax  ++ ws_around_equals_sax)
         mapM_
           (\(v, i) -> it (show i) (shouldBe (either (Left . show) (Right . id) (contents <$> parse i)) v))
           cdata_tests
@@ -74,6 +74,11 @@ extra_examples_sax =
     [(True, "<some-example/>")
     ,(True, "<a numeric1=\"attribute\"/>")
     ,(True, "<also.a.dot></also.a.dot>")
+    ]
+
+ws_around_equals_sax :: [(Bool, ByteString)]
+ws_around_equals_sax =
+    [(True, "<o  \nm   = \"100\"\n  gee =  \"0\">")
     ]
 
 -- | We want to make sure that the parser doesn't jump out of the CDATA
