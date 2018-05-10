@@ -1,5 +1,9 @@
+	0.3.4
+	* Fixed #14 and add test for #15
+	* Fixed typos in the examples (unhammer)
+
 	0.3.2
-	Fixed DOM parsing from bystrings with non-zero offset (qrilka)
+	Fixed DOM parsing from bystrings with non-zero offset (#11, qrilka)
 	
 	0.3
 	Fixed name parsing (for attributes and tags) so it conforms with the XML spec (qrilka)

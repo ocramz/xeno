@@ -19,7 +19,6 @@ import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Unsafe as SU
-import           Data.Either (isRight)
 import           Data.Functor.Identity
 import           Data.Monoid
 import           Data.Word

@@ -1,4 +1,6 @@
-resolver: lts-7.24
+# resolver: lts-7.24
+resolver: lts-11.8
+# resolver: nightly-2018-05-10
 packages:
 - .
 - location:

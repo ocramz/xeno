@@ -10,4 +10,6 @@ Andreas Ekeroot ( Rembane )
 
 Kirill Zaborsky ( qrilka )
 
+Kevin Brubeck Unhammer ( unhammer )
+
 
