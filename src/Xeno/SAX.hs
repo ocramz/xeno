@@ -1,6 +1,5 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE BangPatterns #-}
 
@@ -20,6 +19,7 @@ import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Unsafe as SU
+import           Data.Either (isRight)
 import           Data.Functor.Identity
 import           Data.Monoid
 import           Data.Word
@@ -29,6 +29,15 @@ import           Xeno.Types
 -- Helpful interfaces to the parser
 
 -- | Parse the XML but return no result, process no events.
+--
+-- N.B.: Only the lexical correctness of the input string is checked, not its XML semantics (e.g. only if tags are well formed, not whether tags are properly closed)
+--
+-- > > :set -XOverloadedStrings
+-- > > validate "<b>"
+-- > True
+--
+-- > > validate "<b"
+-- > False
 validate :: ByteString -> Bool
 validate s =
   case spork
