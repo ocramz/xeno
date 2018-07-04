@@ -202,8 +202,9 @@ process openF attrF endOpenF textF closeF cdataF str = findLT 0
         else if s_index str index == closeTagChar
                then pure (Right index)
                else let afterAttrName = parseName str index
-                    in if s_index str afterAttrName == equalChar
-                         then let quoteIndex = afterAttrName + 1
+                        beforeEquals = skipSpaces str afterAttrName
+                    in if s_index str beforeEquals == equalChar
+                         then let quoteIndex = skipSpaces str (beforeEquals + 1)
                                   usedChar = s_index str quoteIndex
                               in if usedChar == quoteChar ||
                                     usedChar == doubleQuoteChar
