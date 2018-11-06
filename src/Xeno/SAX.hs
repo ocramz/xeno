@@ -148,7 +148,8 @@ process openF attrF endOpenF textF closeF cdataF str = findLT 0
         this = S.drop index str
     findCommentEnd index =
       case elemIndexFrom commentChar str index of
-        Nothing -> throw (XenoParseError "Couldn't find the closing comment dash.")
+        Nothing -> throw $ XenoException index str
+                         $ XenoParseError "Couldn't find the closing comment dash."
         Just fromDash ->
           if s_index this 0 == commentChar && s_index this 1 == closeTagChar
             then findLT (fromDash + 2)
@@ -156,7 +157,8 @@ process openF attrF endOpenF textF closeF cdataF str = findLT 0
           where this = S.drop index str
     findCDataEnd cdata_start index =
       case elemIndexFrom closeAngleBracketChar str index of
-        Nothing -> throw (XenoParseError "Couldn't find closing angle bracket for CDATA.")
+        Nothing -> throw $ XenoException index str
+                         $ XenoParseError "Couldn't find closing angle bracket for CDATA."
         Just fromCloseAngleBracket ->
           if s_index str (fromCloseAngleBracket + 1) == closeAngleBracketChar
              then do
@@ -169,7 +171,8 @@ process openF attrF endOpenF textF closeF cdataF str = findLT 0
       let spaceOrCloseTag = parseName str index
       in if | s_index str index0 == questionChar ->
               case elemIndexFrom closeTagChar str spaceOrCloseTag of
-                Nothing -> throw (XenoParseError "Couldn't find the end of the tag.")
+                Nothing -> throw $ XenoException index str
+                                 $ XenoParseError "Couldn't find the end of the tag."
                 Just fromGt -> do
                   findLT (fromGt + 1)
             | s_index str spaceOrCloseTag == closeTagChar ->
@@ -212,7 +215,8 @@ process openF attrF endOpenF textF closeF cdataF str = findLT 0
                                                str
                                                (quoteIndex + 1) of
                                           Nothing ->
-                                            throw (XenoParseError "Couldn't find the matching quote character.")
+                                            throw $ XenoException index str
+                                                  $ XenoParseError "Couldn't find the matching quote character."
                                           Just endQuoteIndex -> do
                                             attrF
                                               (substring str index afterAttrName)
@@ -221,8 +225,10 @@ process openF attrF endOpenF textF closeF cdataF str = findLT 0
                                                  (quoteIndex + 1)
                                                  (endQuoteIndex))
                                             findAttributes (endQuoteIndex + 1)
-                                   else throw (XenoParseError ("Expected ' or \", got: " <> S.singleton usedChar))
-                         else throw (XenoParseError ("Expected =, got: " <> S.singleton (s_index str afterAttrName) <> " at character index: " <> (S8.pack . show) afterAttrName))
+                                   else throw $ XenoException index str
+                                              $ XenoParseError ("Expected ' or \", got: " <> S.singleton usedChar)
+                         else throw $ XenoException index str
+                                    $ XenoParseError ("Expected =, got: " <> S.singleton (s_index str afterAttrName) <> " at character index: " <> (S8.pack . show) afterAttrName)
       where
         index = skipSpaces str index0
 {-# INLINE process #-}
@@ -249,8 +255,8 @@ process openF attrF endOpenF textF closeF cdataF str = findLT 0
 -- | /O(1)/ 'ByteString' index (subscript) operator, starting from 0.
 s_index :: ByteString -> Int -> Word8
 s_index ps n
-    | n < 0          = throw XenoStringIndexProblem
-    | n >= S.length ps = throw XenoStringIndexProblem
+    | n < 0            = throw $ XenoException n ps XenoStringIndexProblem
+    | n >= S.length ps = throw $ XenoException n ps XenoStringIndexProblem
     | otherwise      = ps `SU.unsafeIndex` n
 {-# INLINE s_index #-}
 

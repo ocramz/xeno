@@ -11,9 +11,17 @@ import Data.ByteString (ByteString)
 import Data.Typeable
 import GHC.Generics
 
-data XenoException
+data XenoError
   = XenoStringIndexProblem
   | XenoParseError ByteString
   | XenoExpectRootNode
   deriving (Show, Typeable, NFData, Generic)
+
+data XenoException = XenoException {
+    errIndex  :: Int
+  , errString :: ByteString
+  , err       :: XenoError
+  } deriving (Show, Typeable, NFData, Generic)
+
 instance Exception XenoException where displayException = show
+
