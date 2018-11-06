@@ -35,3 +35,7 @@ script:
 cache:
   directories:
   - $HOME/.stack  
+
+test:
+  - stack test
+  - stack bench
