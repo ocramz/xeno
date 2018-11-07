@@ -128,7 +128,7 @@ parse str =
     Right r ->
       case findRootNode r of
         Just n -> Right n
-        Nothing -> Left $ XenoException 0 str XenoExpectRootNode
+        Nothing -> Left XenoExpectRootNode
   where
     findRootNode r = go 0
       where
