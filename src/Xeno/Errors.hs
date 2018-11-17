@@ -8,6 +8,7 @@ module Xeno.Errors(printExceptions
                   ,failHere
                   ) where
 
+import           Data.Semigroup((<>))
 import qualified Data.ByteString.Char8 as BS hiding (elem)
 import           Data.ByteString.Internal(ByteString(..))
 import           System.IO(stderr)
