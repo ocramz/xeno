@@ -12,4 +12,4 @@ Kirill Zaborsky ( qrilka )
 
 Kevin Brubeck Unhammer ( unhammer )
 
-
+Michal Gajda (mgajda)

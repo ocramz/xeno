@@ -1,5 +1,5 @@
 name: xeno
-version: 0.3.4
+version: 0.3.5
 synopsis: A fast event-based XML parser in pure Haskell
 description: A fast, low-memory use, event-based XML parser in pure Haskell.  
 build-type: Simple
@@ -9,8 +9,8 @@ homepage: https://github.com/ocramz/xeno
 license: BSD3
 license-file: LICENSE
 author: Christopher Done
-maintainer: Marco Zocca (zocca.marco gmail)
-tested-with:         GHC == 8.0.1, GHC == 8.2.2, GHC == 8.4.2
+maintainer: Marco Zocca (ocramz fripost org)
+tested-with:         GHC == 8.0.1, GHC == 8.2.2, GHC == 8.4.2, GHC == 8.4.4
 extra-source-files:  README.md
                      CHANGELOG.markdown
                      CONTRIBUTORS.md                             
@@ -29,7 +29,12 @@ library
   exposed-modules: Xeno.SAX, Xeno.DOM, Xeno.Types, Xeno.Errors
   other-modules: Control.Spork
   build-depends: base >= 4.7 && < 5
-               , bytestring, vector, deepseq, array, mutable-containers, mtl
+               , bytestring
+               , vector
+               , deepseq
+               , array
+               , mutable-containers
+               , mtl
                -- , exceptions
                -- | DEBUG 
                , hspec
