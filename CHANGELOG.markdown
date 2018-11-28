@@ -1,3 +1,6 @@
+	0.3.5
+	* Improve error handling (#24 #26, mgajda)
+
 	0.3.4
 	* Fixed #14 and add test for #15
 	* Fixed typos in the examples (unhammer)
