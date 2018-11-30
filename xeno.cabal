@@ -1,5 +1,5 @@
 name: xeno
-version: 0.3.5
+version: 0.3.5.1
 synopsis: A fast event-based XML parser in pure Haskell
 description: A fast, low-memory use, event-based XML parser in pure Haskell.  
 build-type: Simple
@@ -26,7 +26,7 @@ flag libxml2
 library
   hs-source-dirs: src
   ghc-options: -Wall -O2
-  exposed-modules: Xeno.SAX, Xeno.DOM, Xeno.Types, Xeno.Errors
+  exposed-modules: Xeno.SAX, Xeno.DOM, Xeno.Types, Xeno.Errors 
   other-modules: Control.Spork
   build-depends: base >= 4.7 && < 5
                , bytestring
