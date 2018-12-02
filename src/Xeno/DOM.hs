@@ -1,8 +1,8 @@
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE BangPatterns               #-}
+{-# LANGUAGE DeriveAnyClass             #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-
 -- | DOM parser and API for XML.
 
 module Xeno.DOM
@@ -18,12 +18,13 @@ module Xeno.DOM
 import           Control.DeepSeq
 import           Control.Monad.ST
 import           Control.Spork
-import           Data.ByteString (ByteString)
+import           Data.ByteString          (ByteString)
 import qualified Data.ByteString as S
 import           Data.ByteString.Internal (ByteString(PS))
+import           Data.Data                (Data, Typeable)
 import           Data.Mutable
 import           Data.STRef
-import           Data.Vector.Unboxed ((!))
+import           Data.Vector.Unboxed      ((!))
 import qualified Data.Vector.Unboxed as UV
 import qualified Data.Vector.Unboxed.Mutable as UMV
 import           Xeno.SAX
@@ -31,7 +32,7 @@ import           Xeno.Types
 
 -- | Some XML nodes.
 data Node = Node !ByteString !Int !(UV.Vector Int)
-  deriving (Eq)
+  deriving (Eq, Data, Typeable)
 
 instance NFData Node where
   rnf !_ = ()
@@ -47,7 +48,10 @@ data Content
   = Element {-# UNPACK #-}!Node
   | Text {-# UNPACK #-}!ByteString
   | CData {-# UNPACK #-}!ByteString
-  deriving (Eq, Show)
+  deriving (Eq, Show, Data, Typeable)
+
+instance NFData Content where
+  rnf !_ = ()
 
 -- | Get just element children of the node (no text).
 children :: Node -> [Node]
