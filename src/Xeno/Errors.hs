@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Strict            #-}
 {-# LANGUAGE ViewPatterns      #-}
+{-# LANGUAGE CPP               #-}
 -- | Simplifies raising and presenting localized exceptions to the user.
 module Xeno.Errors(printExceptions
                   ,displayException
