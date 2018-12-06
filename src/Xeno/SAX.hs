@@ -24,6 +24,8 @@ import           Data.Monoid
 import           Data.Word
 import           Xeno.Types
 
+import Debug.Trace
+
 --------------------------------------------------------------------------------
 -- Helpful interfaces to the parser
 
@@ -132,7 +134,8 @@ process openF attrF endOpenF textF closeF cdataF str = findLT 0
       if | s_index this 0 == bangChar -- !
            && s_index this 1 == commentChar -- -
            && s_index this 2 == commentChar -> -- -
-           findCommentEnd (index + 3)
+           trace ("Found comment " <> show (S.take 10 $ S.drop (index-1) str)) $ 
+             findCommentEnd (index + 3)
          | s_index this 0 == bangChar -- !
            && s_index this 1 == openAngleBracketChar -- [
            && s_index this 2 == 67 -- C
@@ -151,8 +154,12 @@ process openF attrF endOpenF textF closeF cdataF str = findLT 0
         Nothing -> throw $ XenoParseError index "Couldn't find the closing comment dash."
         Just fromDash ->
           if s_index this 0 == commentChar && s_index this 1 == closeTagChar
-            then findLT (fromDash + 2)
-            else findCommentEnd (fromDash + 1)
+            then trace ("Closed comment! "   <> show (S.take 10 $ S.drop (index-1)    str )
+                     <> " going for: "       <> show (S.take 10 $ S.drop (fromDash+1) str )) $
+                       findLT (fromDash + 2)
+            else trace ("Unclosed comment: " <> show (S.take 10 $ S.drop (index-1)    str )
+                     <> " going for: "       <> show (S.take 10 $ S.drop  fromDash    str )) $
+                       findCommentEnd (fromDash + 1)
           where this = S.drop index str
     findCDataEnd cdata_start index =
       case elemIndexFrom closeAngleBracketChar str index of
