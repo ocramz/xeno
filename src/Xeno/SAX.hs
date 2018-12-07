@@ -29,7 +29,7 @@ import           Data.Monoid
 import           Data.Word
 import           Xeno.Types
 
-import Debug.Trace
+--import Debug.Trace
 
 data Process a =
   Process {
@@ -148,8 +148,7 @@ process Process {openF, attrF, endOpenF, textF, closeF, cdataF} str = findLT 0
       if | s_index this 0 == bangChar -- !
            && s_index this 1 == commentChar -- -
            && s_index this 2 == commentChar -> -- -
-           trace ("Found comment " <> show (S.take 10 $ S.drop (index-1) str)) $ 
-             findCommentEnd (index + 3)
+           findCommentEnd (index + 3)
          | s_index this 0 == bangChar -- !
            && s_index this 1 == openAngleBracketChar -- [
            && s_index this 2 == 67 -- C
@@ -168,12 +167,8 @@ process Process {openF, attrF, endOpenF, textF, closeF, cdataF} str = findLT 0
         Nothing -> throw $ XenoParseError index "Couldn't find the closing comment dash."
         Just fromDash ->
           if s_index this 0 == commentChar && s_index this 1 == closeTagChar
-            then trace ("Closed comment! "   <> show (S.take 10 $ S.drop (index-1)    str )
-                     <> " going for: "       <> show (S.take 10 $ S.drop (fromDash+1) str )) $
-                       findLT (fromDash + 2)
-            else trace ("Unclosed comment: " <> show (S.take 10 $ S.drop (index-1)    str )
-                     <> " going for: "       <> show (S.take 10 $ S.drop  fromDash    str )) $
-                       findCommentEnd (fromDash + 1)
+            then findLT (fromDash + 2)
+            else findCommentEnd (fromDash + 1)
           where this = S.drop index str
     findCDataEnd cdata_start index =
       case elemIndexFrom closeAngleBracketChar str index of
@@ -248,7 +243,7 @@ process Process {openF, attrF, endOpenF, textF, closeF, cdataF} str = findLT 0
                          else throw (XenoParseError index ("Expected =, got: " <> S.singleton (s_index str afterAttrName) <> " at character index: " <> (S8.pack . show) afterAttrName))
       where
         index = skipSpaces str index0
-{-# INLINE CONLIKE process #-}
+{-# INLINE process #-}
 {-# SPECIALISE process :: Process (Identity ()) -> ByteString -> Identity ()
                #-}
 {-# SPECIALISE process :: Process (State s ()) -> ByteString -> State s ()
@@ -376,8 +371,8 @@ skipDoctype :: ByteString -> ByteString
 skipDoctype arg =
     if "<!DOCTYPE" `S8.isPrefixOf` bs
       then let (_, rest)=">" `S8.breakSubstring` bs
-           in skipSpaces $ S8.drop 1 rest
+           in skipBlanks $ S8.drop 1 rest
       else bs
   where
-    bs = skipSpaces arg
-    skipSpaces = S8.dropWhile isSpace
+    bs = skipBlanks arg
+    skipBlanks = S8.dropWhile isSpace

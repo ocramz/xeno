@@ -6,6 +6,6 @@ packages:
     commit: 22923b55ca7390f1973ddfd0d0e517f13cf8a8a4
   extra-dep: True
 extra-deps:
-- hexpat-0.20.9
-- List-0.5.2
+- hexpat-0.20.13
+- List-0.6.2
 - libxml-0.1.1

@@ -21,7 +21,7 @@ import           Text.XML.Light as XML
 import           Text.XML.Light.Input as XML
 import qualified Xeno.SAX
 import qualified Xeno.DOM
-import qualified Xeno.RobustDOM
+import qualified Xeno.DOM.Robust
 #ifdef LIBXML2
 import qualified Text.XML.LibXML.Parser as Libxml2
 #endif
@@ -37,7 +37,7 @@ main =
              [ bench "hexml-dom" (whnf Hexml.parse input)
              , bench "xeno-sax" (whnf Xeno.SAX.validate input)
              , bench "xeno-dom" (whnf Xeno.DOM.parse input)
-             , bench "xeno-dom-with-recovery" (whnf Xeno.RobustDOM.parse input)
+             , bench "xeno-dom-with-recovery" (whnf Xeno.DOM.Robust.parse input)
              , bench
                  "hexpat-sax"
                  (whnf
@@ -62,7 +62,7 @@ main =
              [ bench "hexml-dom" (whnf Hexml.parse input)
              , bench "xeno-sax" (whnf Xeno.SAX.validate input)
              , bench "xeno-dom" (whnf Xeno.DOM.parse input)
-             , bench "xeno-dom-with-recovery" (whnf Xeno.RobustDOM.parse input)
+             , bench "xeno-dom-with-recovery" (whnf Xeno.DOM.Robust.parse input)
              , bench
                  "hexpat-sax"
                  (nf
@@ -88,7 +88,7 @@ main =
              [ bench "hexml-dom" (whnf Hexml.parse input)
              , bench "xeno-sax" (whnf Xeno.SAX.validate input)
              , bench "xeno-dom" (whnf Xeno.DOM.parse input)
-             , bench "xeno-dom-with-recovery" (whnf Xeno.RobustDOM.parse input)
+             , bench "xeno-dom-with-recovery" (whnf Xeno.DOM.Robust.parse input)
              , bench
                  "hexpat-sax"
                  (nf
