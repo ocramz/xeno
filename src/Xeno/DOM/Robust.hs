@@ -32,7 +32,7 @@ import           Xeno.DOM.Internal(Node(..), Content(..), name, attributes, cont
 
 -- | Parse a complete Nodes document.
 parse :: ByteString -> Either XenoException Node
-parse str =
+parse inp =
   case spork node of
     Left e -> Left e
     Right r ->
@@ -49,12 +49,13 @@ parse str =
           Just 0x1 -> go (n+3)
           _ -> Nothing
     PS _ offset0 _ = str
+    str = skipDoctype inp
     node =
       runST
         (do nil <- UMV.new 1000
-            vecRef <- newSTRef nil
-            sizeRef <- fmap asURef (newRef 0)
-            parentRef <- fmap asURef (newRef 0)
+            vecRef    <- newSTRef nil
+            sizeRef   <- fmap asURef $ newRef 0
+            parentRef <- fmap asURef $ newRef 0
             process
               (\(PS _ name_start name_len) -> do
                  let tag = 0x00

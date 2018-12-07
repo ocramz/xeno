@@ -10,6 +10,7 @@ module Xeno.SAX
   , fold
   , validate
   , dump
+  , skipDoctype
   ) where
 
 import           Control.Exception
@@ -19,6 +20,7 @@ import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Unsafe as SU
+import           Data.Char(isSpace)
 import           Data.Functor.Identity
 import           Data.Monoid
 import           Data.Word
@@ -364,3 +366,19 @@ openAngleBracketChar = 91
 -- | Close angle bracket character.
 closeAngleBracketChar :: Word8
 closeAngleBracketChar = 93
+
+-- | Skip initial DOCTYPE declaration
+skipDoctype :: ByteString -> ByteString
+skipDoctype arg =
+    if "<!DOCTYPE" `S8.isPrefixOf` bs
+      then let (_, rest)=">" `S8.breakSubstring` bs
+           in skipSpaces $ S8.drop 1 rest
+      else bs
+  where
+    bs = skipSpaces arg
+    skipSpaces = S8.dropWhile isSpace
+    {-withoutXML = if "<?" `S8.isPrefixOf` skipSpaces withoutDoctype
+      then let (_, rest)="?>" `S8.breakSubstring` withoutDoctype
+           in skipSpaces $ S8.drop 2 rest
+      else  bs-}
+

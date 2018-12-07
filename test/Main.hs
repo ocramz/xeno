@@ -10,7 +10,7 @@ import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import           Test.Hspec
 --import qualified Test.Hspec as Hspec(it)
-import           Xeno.SAX  (validate)
+import           Xeno.SAX  (validate, skipDoctype)
 import           Xeno.DOM  (Content(..), parse, name, contents, attributes, children)
 import qualified Xeno.DOM.Robust as RDOM
 import           Xeno.Types
@@ -67,10 +67,6 @@ spec = do
       let docWithPrologue = "<?xml version=\"1.1\"?>\n<greeting>Hello, world!</greeting>"
           parsedRoot = fromRightE $ Xeno.DOM.parse docWithPrologue
       name parsedRoot `shouldBe` "greeting"                
-    it "html doctype test" $ do
-      let docWithPrologue = "<!DOCTYPE html>\n<greeting>Hello, world!</greeting>"
-          parsedRoot = fromRightE $ Xeno.DOM.parse docWithPrologue
-      name parsedRoot `shouldBe` "greeting"
       
   describe
     "hexml tests"
@@ -139,6 +135,14 @@ spec = do
     it "ignores too many closing tags" $ do
       let parsed = RDOM.parse "<a></a></b></c>"
       isRight parsed `shouldBe` True
+  describe "skipDoctype" $ do
+    it "strips initial doctype declaration" $ do
+      skipDoctype "<!DOCTYPE html><?xml version=\"1.0\" encoding=\"UTF-8\"?>Hello" `shouldBe` "<?xml version=\"1.0\" encoding=\"UTF-8\"?>Hello"
+    it "strips doctype after spaces" $ do
+      skipDoctype "  \n<!DOCTYPE html><?xml version=\"1.0\" encoding=\"UTF-8\"?>Hello" `shouldBe` "<?xml version=\"1.0\" encoding=\"UTF-8\"?>Hello"
+    it "does not strip anything after or inside element" $ do
+      let insideElt = "<xml><?xml version=\"1.0\" encoding=\"UTF-8\"?>Hello</xml>"
+      skipDoctype  insideElt `shouldBe` insideElt
 
 hexml_examples_sax :: [(Bool, ByteString)]
 hexml_examples_sax =

@@ -14,10 +14,9 @@ module Xeno.DOM.Internal
   ) where
 
 import           Control.DeepSeq
-import           Control.Monad.ST
 import           Data.ByteString          (ByteString)
 import qualified Data.ByteString as S
-import           Data.ByteString.Internal (ByteString(PS))
+import           Data.ByteString.Internal (ByteString(..))
 import           Data.Data                (Data, Typeable)
 import           Data.Mutable
 import           Data.STRef
@@ -60,7 +59,7 @@ children (Node str start offsets) = collect firstChild
         case offsets ! i of
           0x00 -> Node str i offsets : collect (offsets ! (i + 4))
           0x01 -> collect (i + 3)
-          off -> [] -- trace ("Offsets " <> show i <> " is " <> show off) []
+          _off -> [] -- trace ("Offsets " <> show i <> " is " <> show off) []
       | otherwise = []
     firstChild = go (start + 5)
       where

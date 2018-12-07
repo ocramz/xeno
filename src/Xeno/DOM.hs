@@ -48,7 +48,7 @@ parse str =
           -- skipping text assuming that it contains only white space
           -- characters
           Just 0x1 -> go (n+3)
-          _ -> Nothing
+          _        -> Nothing
     PS _ offset0 _ = str
     node =
       runST
