@@ -131,12 +131,10 @@ spec = do
             validate nsdoc `shouldBe` True
       )
     it "recovers unclosed tag" $ do
-      let parsed = RDOM.parse "<a attr='a'><img></img></a>"
-      True `shouldBe` True
+      let parsed = RDOM.parse "<a attr='a'><img></a>"
       Debug.trace (show parsed) $ do
         name (fromRightE parsed) `shouldBe` "a"
-        RDOM.attributes (fromRightE parsed) `shouldBe` []
-        RDOM.children   (fromRightE parsed) `shouldBe` []
+        RDOM.attributes (fromRightE parsed) `shouldBe` [("attr", "a")]
         map name (RDOM.children $ fromRightE parsed) `shouldBe` ["img"]
     it "ignores too many closing tags" $ do
       let parsed = RDOM.parse "<a></a></b></c>"

@@ -120,22 +120,20 @@ parse str =
                  index <- readRef sizeRef
                  untilM $ do
                    parent <- readRef parentRef
-                   if parent == 0
-                     then return True -- no more tags to close!!!
-                     else do
-                       parent_name    <- UMV.read v (parent + 2)
-                       parent_len     <- UMV.read v (parent + 3)
-                       let openTag   = PS s (parent_name+offset0) parent_len
-                           correctTag = openTag == closeTag
-                       trace ("correct tag? " <> show openTag  <>
-                              " "             <> show closeTag <>
-                              " "             <> show correctTag) $
-                         do
-                           UMV.write                  v (parent + 4) index
-                           -- Pop the stack and return to the parent element.
-                           previousParent <- UMV.read v (parent + 1)
-                           writeRef parentRef previousParent
-                           return correctTag -- continue closing tags, until matching one is found
+                   correctTag <- if parent == 0
+                                    then return True -- no more tags to close!!!
+                                    else do
+                                      parent_name <- UMV.read v (parent + 2)
+                                      parent_len  <- UMV.read v (parent + 3)
+                                      let openTag  = PS s (parent_name+offset0) parent_len
+                                      trace ("correct tag? " <> show openTag    <>
+                                             " "             <> show closeTag   ) $ do
+                                        return       $ openTag == closeTag
+                   UMV.write                  v (parent + 4) index
+                   -- Pop the stack and return to the parent element.
+                   previousParent <- UMV.read v (parent + 1)
+                   writeRef parentRef previousParent
+                   return correctTag -- continue closing tags, until matching one is found
               )
               (\(PS _ cdata_start cdata_len) -> do
                  let tag = 0x03
