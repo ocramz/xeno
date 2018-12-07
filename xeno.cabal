@@ -26,7 +26,7 @@ flag libxml2
 library
   hs-source-dirs: src
   ghc-options: -Wall -O2
-  exposed-modules: Xeno.SAX, Xeno.DOM, Xeno.Types, Xeno.Errors, Xeno.RobustDOM
+  exposed-modules: Xeno.SAX, Xeno.DOM, Xeno.Types, Xeno.Errors, Xeno.DOM.Robust
   other-modules: Control.Spork, Xeno.DOM.Internal 
   build-depends: base >= 4.7 && < 5
                , bytestring
