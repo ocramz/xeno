@@ -6,7 +6,7 @@
 -- | DOM parser and API for XML.
 --   Slightly slower DOM parsing,
 --   but add missing close tags.
-module Xeno.RobustDOM
+module Xeno.DOM.Robust
   ( parse
   , Node
   , Content(..)
@@ -16,31 +16,26 @@ module Xeno.RobustDOM
   , children
   ) where
 
-import           Control.DeepSeq
 import           Control.Monad.ST
 import           Control.Spork
-import           Data.ByteString          (ByteString)
-import qualified Data.ByteString as S
-import           Data.ByteString.Internal (ByteString(PS))
+import           Data.ByteString.Internal(ByteString(..))
+import qualified Data.ByteString             as S
 import           Data.Data                (Data, Typeable)
-import           Data.Mutable
 import           Data.STRef
 import           Data.Vector.Unboxed      ((!))
-import qualified Data.Vector.Unboxed as UV
+import qualified Data.Vector.Unboxed         as UV
 import qualified Data.Vector.Unboxed.Mutable as UMV
+import           Data.Mutable(asURef, newRef, readRef, writeRef)
 import           Xeno.SAX
 import           Xeno.Types
 import           Xeno.DOM.Internal(Node(..), Content(..), name, attributes, contents, children)
-
-import Debug.Trace(trace)
---trace _ a = a
 
 -- | Parse a complete Nodes document.
 parse :: ByteString -> Either XenoException Node
 parse str =
   case spork node of
     Left e -> Left e
-    Right r ->  trace ("offset array: " <> show r) $
+    Right r ->
       case findRootNode r of
         Just n -> Right n
         Nothing -> Left XenoExpectRootNode
@@ -114,7 +109,7 @@ parse str =
                  do UMV.write v' index tag
                     UMV.write v' (index + 1) (text_start - offset0)
                     UMV.write v' (index + 2) text_len)
-              (\closeTag@(PS s closeTag_start closeTag_len) -> do
+              (\closeTag@(PS s _ _) -> do
                  v <- readSTRef vecRef
                  -- Set the tag_end slot of the parent.
                  index <- readRef sizeRef
@@ -126,9 +121,7 @@ parse str =
                                       parent_name <- UMV.read v (parent + 2)
                                       parent_len  <- UMV.read v (parent + 3)
                                       let openTag  = PS s (parent_name+offset0) parent_len
-                                      trace ("correct tag? " <> show openTag    <>
-                                             " "             <> show closeTag   ) $ do
-                                        return       $ openTag == closeTag
+                                      return       $ openTag == closeTag
                    UMV.write                  v (parent + 4) index
                    -- Pop the stack and return to the parent element.
                    previousParent <- UMV.read v (parent + 1)

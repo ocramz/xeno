@@ -12,7 +12,7 @@ import           Test.Hspec
 --import qualified Test.Hspec as Hspec(it)
 import           Xeno.SAX  (validate)
 import           Xeno.DOM  (Content(..), parse, name, contents, attributes, children)
-import qualified Xeno.RobustDOM as RDOM
+import qualified Xeno.DOM.Robust as RDOM
 import           Xeno.Types
 import           System.Timeout
 import qualified Debug.Trace as Debug(trace)

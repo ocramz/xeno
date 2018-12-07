@@ -26,10 +26,9 @@ import           Data.Vector.Unboxed      ((!))
 import qualified Data.Vector.Unboxed as UV
 import qualified Data.Vector.Unboxed.Mutable as UMV
 import           Xeno.SAX
-import           Xeno.Types
 
 --import Debug.Trace
-trace _ a = a
+--trace _ a = a
 
 -- | Some XML nodes.
 data Node = Node !ByteString !Int !(UV.Vector Int)
@@ -63,7 +62,7 @@ children (Node str start offsets) = collect firstChild
         case offsets ! i of
           0x00 -> Node str i offsets : collect (offsets ! (i + 4))
           0x01 -> collect (i + 3)
-          off -> trace ("Offsets " <> show i <> " is " <> show off) []
+          off -> [] -- trace ("Offsets " <> show i <> " is " <> show off) []
       | otherwise = []
     firstChild = go (start + 5)
       where
