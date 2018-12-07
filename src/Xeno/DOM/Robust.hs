@@ -56,8 +56,8 @@ parse inp =
             vecRef    <- newSTRef nil
             sizeRef   <- fmap asURef $ newRef 0
             parentRef <- fmap asURef $ newRef 0
-            process
-              (\(PS _ name_start name_len) -> do
+            process Process {
+                openF = \(PS _ name_start name_len) -> do
                  let tag = 0x00
                      tag_end = -1
                  index <- readRef sizeRef
@@ -72,12 +72,12 @@ parse inp =
                  tag_parent <- readRef parentRef
                  do writeRef parentRef index
                     writeRef sizeRef (index + 5)
-                 do UMV.write v' index tag
+                    UMV.write v' index tag
                     UMV.write v' (index + 1) tag_parent
                     UMV.write v' (index + 2) (name_start - offset0)
                     UMV.write v' (index + 3) name_len
-                    UMV.write v' (index + 4) tag_end)
-              (\(PS _ key_start key_len) (PS _ value_start value_len) -> do
+                    UMV.write v' (index + 4) tag_end
+              , attrF = \(PS _ key_start key_len) (PS _ value_start value_len) -> do
                  index <- readRef sizeRef
                  v' <-
                    do v <- readSTRef vecRef
@@ -93,9 +93,9 @@ parse inp =
                     UMV.write v' (index + 1) (key_start - offset0)
                     UMV.write v' (index + 2) key_len
                     UMV.write v' (index + 3) (value_start - offset0)
-                    UMV.write v' (index + 4) value_len)
-              (\_ -> return ())
-              (\(PS _ text_start text_len) -> do
+                    UMV.write v' (index + 4) value_len
+              , endOpenF = \_ -> return ()
+              , textF = \(PS _ text_start text_len) -> do
                  let tag = 0x01
                  index <- readRef sizeRef
                  v' <-
@@ -109,8 +109,8 @@ parse inp =
                  do writeRef sizeRef (index + 3)
                  do UMV.write v' index tag
                     UMV.write v' (index + 1) (text_start - offset0)
-                    UMV.write v' (index + 2) text_len)
-              (\closeTag@(PS s _ _) -> do
+                    UMV.write v' (index + 2) text_len
+              , closeF = \closeTag@(PS s _ _) -> do
                  v <- readSTRef vecRef
                  -- Set the tag_end slot of the parent.
                  index <- readRef sizeRef
@@ -128,8 +128,7 @@ parse inp =
                    previousParent <- UMV.read v (parent + 1)
                    writeRef parentRef previousParent
                    return correctTag -- continue closing tags, until matching one is found
-              )
-              (\(PS _ cdata_start cdata_len) -> do
+              , cdataF = \(PS _ cdata_start cdata_len) -> do
                  let tag = 0x03
                  index <- readRef sizeRef
                  v' <-
@@ -143,8 +142,8 @@ parse inp =
                  do writeRef sizeRef (index + 3)
                  do UMV.write v' index tag
                     UMV.write v' (index + 1) (cdata_start - offset0)
-                    UMV.write v' (index + 2) cdata_len)
-              str
+                    UMV.write v' (index + 2) cdata_len
+              } str
             wet <- readSTRef vecRef
             arr <- UV.unsafeFreeze wet
             size <- readRef sizeRef
