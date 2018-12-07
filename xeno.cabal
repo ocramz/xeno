@@ -32,12 +32,11 @@ library
                , bytestring
                , vector
                , deepseq
-               , array
                , mutable-containers
                , mtl
                -- , exceptions
                -- | DEBUG 
-               , hspec
+               -- , hspec
   default-language: Haskell2010
 
 test-suite xeno-test
@@ -46,8 +45,6 @@ test-suite xeno-test
   hs-source-dirs: test
   main-is: Main.hs
   build-depends: base, xeno, hexml, hspec, bytestring
-               -- | DEBUG 
-               , hspec
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   default-language: Haskell2010
 
