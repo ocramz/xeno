@@ -33,12 +33,12 @@ import           Xeno.Types
 
 data Process a =
   Process {
-      openF    :: ByteString ->               a -- ^ Open tag.
-    , attrF    :: ByteString -> ByteString -> a -- ^ Tag attribute.
-    , endOpenF :: ByteString ->               a -- ^ End open tag.
-    , textF    :: ByteString ->               a -- ^ Text.
-    , closeF   :: ByteString ->               a -- ^ Close tag.
-    , cdataF   :: ByteString ->               a -- ^ CDATA.
+      openF    :: !(ByteString ->               a) -- ^ Open tag.
+    , attrF    :: !(ByteString -> ByteString -> a) -- ^ Tag attribute.
+    , endOpenF :: !(ByteString ->               a) -- ^ End open tag.
+    , textF    :: !(ByteString ->               a) -- ^ Text.
+    , closeF   :: !(ByteString ->               a) -- ^ Close tag.
+    , cdataF   :: !(ByteString ->               a) -- ^ CDATA.
     }
 
 --------------------------------------------------------------------------------
@@ -133,7 +133,7 @@ process
   :: Monad m
   => Process (m ())
   -> ByteString -> m ()
-process Process {openF, attrF, endOpenF, textF, closeF, cdataF} str = findLT 0
+process !(Process {openF, attrF, endOpenF, textF, closeF, cdataF}) str = findLT 0
   where
     findLT index =
       case elemIndexFrom openTagChar str index of
