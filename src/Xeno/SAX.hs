@@ -1,28 +1,45 @@
-{-# LANGUAGE MultiWayIf #-}
+{-# LANGUAGE MultiWayIf          #-}
+{-# LANGUAGE NamedFieldPuns      #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE BangPatterns        #-}
 
 -- | SAX parser and API for XML.
 
 module Xeno.SAX
   ( process
+  , Process(..)
   , fold
   , validate
   , dump
+  , skipDoctype
   ) where
 
 import           Control.Exception
 import           Control.Monad.State.Strict
+import           Control.Monad.ST
 import           Control.Spork
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Unsafe as SU
+import           Data.Char(isSpace)
 import           Data.Functor.Identity
 import           Data.Monoid
 import           Data.Word
 import           Xeno.Types
+
+--import Debug.Trace
+
+data Process a =
+  Process {
+      openF    :: !(ByteString ->               a) -- ^ Open tag.
+    , attrF    :: !(ByteString -> ByteString -> a) -- ^ Tag attribute.
+    , endOpenF :: !(ByteString ->               a) -- ^ End open tag.
+    , textF    :: !(ByteString ->               a) -- ^ Text.
+    , closeF   :: !(ByteString ->               a) -- ^ Close tag.
+    , cdataF   :: !(ByteString ->               a) -- ^ CDATA.
+    }
 
 --------------------------------------------------------------------------------
 -- Helpful interfaces to the parser
@@ -42,12 +59,14 @@ validate s =
   case spork
          (runIdentity
             (process
-               (\_ -> pure ())
-               (\_ _ -> pure ())
-               (\_ -> pure ())
-               (\_ -> pure ())
-               (\_ -> pure ())
-               (\_ -> pure ())
+               Process {
+                 openF    = \_   -> pure ()
+               , attrF    = \_ _ -> pure ()
+               , endOpenF = \_   -> pure ()
+               , textF    = \_   -> pure ()
+               , closeF   = \_   -> pure ()
+               , cdataF   = \_   -> pure ()
+               }
                s)) of
     Left (_ :: XenoException) -> False
     Right _ -> True
@@ -57,26 +76,28 @@ dump :: ByteString -> IO ()
 dump str =
   evalStateT
     (process
-       (\name -> do
+       Process {
+         openF = \name -> do
           level <- get
-          lift (S8.putStr (S8.replicate level ' ' <> "<" <> name <> "")))
-       (\key value -> lift (S8.putStr (" " <> key <> "=\"" <> value <> "\"")))
-       (\_ -> do
+          lift (S8.putStr (S8.replicate level ' ' <> "<" <> name <> ""))
+       , attrF = \key value -> lift (S8.putStr (" " <> key <> "=\"" <> value <> "\""))
+       , endOpenF = \_ -> do
           level <- get
           let !level' = level + 2
           put level'
-          lift (S8.putStrLn (">")))
-       (\text -> do
+          lift (S8.putStrLn (">"))
+       , textF = \text -> do
           level <- get
-          lift (S8.putStrLn (S8.replicate level ' ' <> S8.pack (show text))))
-       (\name -> do
+          lift (S8.putStrLn (S8.replicate level ' ' <> S8.pack (show text)))
+       , closeF = \name -> do
           level <- get
           let !level' = level - 2
           put level'
-          lift (S8.putStrLn (S8.replicate level' ' ' <> "</" <> name <> ">")))
-       (\cdata -> do
+          lift (S8.putStrLn (S8.replicate level' ' ' <> "</" <> name <> ">"))
+       , cdataF = \cdata -> do
           level <- get
-          lift (S8.putStrLn (S8.replicate level ' ' <> "CDATA: " <> S8.pack (show cdata))))
+          lift (S8.putStrLn (S8.replicate level ' ' <> "CDATA: " <> S8.pack (show cdata)))
+       }
        str)
     (0 :: Int)
 
@@ -94,14 +115,14 @@ fold
 fold openF attrF endOpenF textF closeF cdataF s str =
   spork
     (execState
-       (process
-          (\name -> modify (\s' -> openF s' name))
-          (\key value -> modify (\s' -> attrF s' key value))
-          (\name -> modify (\s' -> endOpenF s' name))
-          (\text -> modify (\s' -> textF s' text))
-          (\name -> modify (\s' -> closeF s' name))
-          (\cdata -> modify (\s' -> cdataF s' cdata))
-          str)
+       (process Process {
+            openF    = \name -> modify (\s' -> openF s' name)
+          , attrF    = \key value -> modify (\s' -> attrF s' key value)
+          , endOpenF = \name -> modify (\s' -> endOpenF s' name)
+          , textF    = \text -> modify (\s' -> textF s' text)
+          , closeF   = \name -> modify (\s' -> closeF s' name)
+          , cdataF   = \cdata -> modify (\s' -> cdataF s' cdata)
+        } str)
        s)
 
 --------------------------------------------------------------------------------
@@ -110,14 +131,9 @@ fold openF attrF endOpenF textF closeF cdataF s str =
 -- | Process events with callbacks in the XML input.
 process
   :: Monad m
-  => (ByteString -> m ()) -- ^ Open tag.
-  -> (ByteString -> ByteString -> m ()) -- ^ Tag attribute.
-  -> (ByteString -> m ()) -- ^ End open tag.
-  -> (ByteString -> m ()) -- ^ Text.
-  -> (ByteString -> m ()) -- ^ Close tag.
-  -> (ByteString -> m ()) -- ^ CDATA.
+  => Process (m ())
   -> ByteString -> m ()
-process openF attrF endOpenF textF closeF cdataF str = findLT 0
+process !(Process {openF, attrF, endOpenF, textF, closeF, cdataF}) str = findLT 0
   where
     findLT index =
       case elemIndexFrom openTagChar str index of
@@ -228,21 +244,13 @@ process openF attrF endOpenF textF closeF cdataF str = findLT 0
       where
         index = skipSpaces str index0
 {-# INLINE process #-}
-{-# SPECIALISE process ::
-                 (ByteString -> Identity ()) ->
-                   (ByteString -> ByteString -> Identity ()) ->
-                     (ByteString -> Identity ()) ->
-                       (ByteString -> Identity ()) ->
-                         (ByteString -> Identity ()) ->
-                           (ByteString -> Identity ()) -> ByteString -> Identity ()
+{-# SPECIALISE process :: Process (Identity ()) -> ByteString -> Identity ()
                #-}
-{-# SPECIALISE process ::
-                 (ByteString -> IO ()) ->
-                   (ByteString -> ByteString -> IO ()) ->
-                     (ByteString -> IO ()) ->
-                       (ByteString -> IO ()) ->
-                         (ByteString -> IO ()) ->
-                           (ByteString -> IO ()) -> ByteString -> IO ()
+{-# SPECIALISE process :: Process (State s ()) -> ByteString -> State s ()
+               #-}
+{-# SPECIALISE process :: Process (ST s ()) -> ByteString -> ST s ()
+               #-}
+{-# SPECIALISE process :: Process (IO ()) -> ByteString -> IO ()
                #-}
 
 --------------------------------------------------------------------------------
@@ -357,3 +365,14 @@ openAngleBracketChar = 91
 -- | Close angle bracket character.
 closeAngleBracketChar :: Word8
 closeAngleBracketChar = 93
+
+-- | Skip initial DOCTYPE declaration
+skipDoctype :: ByteString -> ByteString
+skipDoctype arg =
+    if "<!DOCTYPE" `S8.isPrefixOf` bs
+      then let (_, rest)=">" `S8.breakSubstring` bs
+           in skipBlanks $ S8.drop 1 rest
+      else bs
+  where
+    bs = skipBlanks arg
+    skipBlanks = S8.dropWhile isSpace
