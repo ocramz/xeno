@@ -5,13 +5,14 @@
 
 module Main where
 
+import           Control.Monad
 import           Data.Either (isRight)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import           Test.Hspec
 --import qualified Test.Hspec as Hspec(it)
 import           Xeno.SAX  (validate, skipDoctype)
-import           Xeno.DOM  (Content(..), parse, name, contents, attributes, children)
+import           Xeno.DOM  (Node, Content(..), parse, name, contents, attributes, children)
 import qualified Xeno.DOM.Robust as RDOM
 import           Xeno.Types
 import           System.Timeout
@@ -42,8 +43,41 @@ it s = Hspec.it s . withinTime (5*second) . pure
   where
     second = 1000000-}
 
+allChildrens :: Node -> [Node]
+allChildrens n = allChildrens' [n]
+  where
+    allChildrens' :: [Node] -> [Node]
+    allChildrens' [] = []
+    allChildrens' ns =
+        let nextNodes = concatMap children ns
+        in nextNodes ++ (allChildrens' nextNodes)
+
+
+
 spec :: SpecWith ()
 spec = do
+    describe "Xeno.DOM tests" $ do
+        it "test 1" $ do
+            xml <- BS.readFile "data/books-4kb.xml"
+            let (Right dom) = parse xml
+            (name dom) `shouldBe` "catalog"
+            (length $ contents dom) `shouldBe` 25
+            (length $ children dom) `shouldBe` 12
+            (length $ allChildrens dom) `shouldBe` 84
+            (length $ concatMap attributes $ allChildrens dom) `shouldBe` 12
+            (concatMap attributes $ allChildrens dom) `shouldBe`
+                [("id","bk101"),("id","bk102"),("id","bk103"),("id","bk104")
+                ,("id","bk105"),("id","bk106"),("id","bk107"),("id","bk108")
+                ,("id","bk109"),("id","bk110"),("id","bk111"),("id","bk112")]
+            (map name $ allChildrens dom) `shouldBe`
+                (replicate 12 "book" ++ (concat $
+                 replicate 12 ["author","title","genre","price","publish_date","description"]))
+
+
+
+    {-
+
+
   describe "Xeno.DOM tests" $ do
     it "DOM from bytestring substring" $ do
       let substr = BS.drop 5 "5<8& <valid>xml<here/></valid>"
@@ -184,3 +218,4 @@ mapLeft f = either f pure
 
 mapRight :: Applicative f => (b -> f a) -> Either a b -> f a
 mapRight = either pure
+-}
