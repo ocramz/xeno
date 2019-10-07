@@ -1,8 +1,9 @@
+{-# LANGUAGE BangPatterns        #-}
+{-# LANGUAGE BinaryLiterals      #-}
 {-# LANGUAGE MultiWayIf          #-}
 {-# LANGUAGE NamedFieldPuns      #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE BangPatterns        #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- | SAX parser and API for XML.
 
@@ -16,20 +17,18 @@ module Xeno.SAX
   ) where
 
 import           Control.Exception
-import           Control.Monad.State.Strict
 import           Control.Monad.ST
+import           Control.Monad.State.Strict
 import           Control.Spork
+import           Data.Bits
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Unsafe as SU
 import           Data.Char(isSpace)
 import           Data.Functor.Identity
-import           Data.Monoid
 import           Data.Word
 import           Xeno.Types
-
---import Debug.Trace
 
 data Process a =
   Process {
@@ -133,8 +132,11 @@ process
   :: Monad m
   => Process (m ())
   -> ByteString -> m ()
-process !(Process {openF, attrF, endOpenF, textF, closeF, cdataF}) str = findLT 0
+process !(Process {openF, attrF, endOpenF, textF, closeF, cdataF}) str' = findLT 0
   where
+    -- We add \NUL to omit length check in `s_index`
+    -- Also please see https://gitlab.com/migamake/xeno/issues/1
+    str = str' `S.snoc` 0
     findLT index =
       case elemIndexFrom openTagChar str index of
         Nothing -> unless (S.null text) (textF text)
@@ -259,8 +261,12 @@ process !(Process {openF, attrF, endOpenF, textF, closeF, cdataF}) str = findLT 
 -- | /O(1)/ 'ByteString' index (subscript) operator, starting from 0.
 s_index :: ByteString -> Int -> Word8
 s_index ps n
-    | n < 0            = throw (XenoStringIndexProblem n ps)
-    | n >= S.length ps = throw (XenoStringIndexProblem n ps)
+    -- 1) `n` is always non-negative;
+    -- 2) parser will stop on last `\NUL` (added in `process`) so we don't need to check crossing string boundary.
+    --    Also please see https://gitlab.com/migamake/xeno/issues/1
+    --
+    -- | n < 0            = throw (XenoStringIndexProblem n ps)
+    -- | n >= S.length ps = throw (XenoStringIndexProblem n ps)
     | otherwise      = ps `SU.unsafeIndex` n
 {-# INLINE s_index #-}
 
@@ -283,6 +289,7 @@ parseName str index =
   if not (isNameChar1 (s_index str index))
      then index
      else parseName' str (index + 1)
+{-# INLINE parseName #-}
 
 -- | Basically @findIndex (not . isNameChar)@, but doesn't allocate.
 parseName' :: ByteString -> Int -> Int
@@ -304,7 +311,12 @@ elemIndexFrom c str offset = fmap (+ offset) (S.elemIndex c (S.drop offset str))
 -- Character types
 
 isSpaceChar :: Word8 -> Bool
-isSpaceChar c = c == 32 || (c <= 10 && c >= 9) || c == 13
+isSpaceChar = testBit (0b100000000000000000010011000000000 :: Int) . fromIntegral
+--                       |                  |  ||  bits:
+--                       |                  |  |+-- 9
+--                       |                  |  +--- 10
+--                       |                  +------ 13
+--                       +------------------------- 32
 {-# INLINE isSpaceChar #-}
 
 -- | Is the character a valid first tag/attribute name constituent?
@@ -314,12 +326,44 @@ isNameChar1 c =
   (c >= 97 && c <= 122) || (c >= 65 && c <= 90) || c == 95 || c == 58
 {-# INLINE isNameChar1 #-}
 
+-- isNameCharOriginal :: Word8 -> Bool
+-- isNameCharOriginal c =
+--   (c >= 97 && c <= 122) || (c >= 65 && c <= 90) || c == 95 || c == 58 ||
+--   c == 45 || c == 46 || (c >= 48 && c <= 57)
+-- {-# INLINE isNameCharOriginal #-}
+--
+-- TODO Strange, but highMaskIsNameChar, lowMaskIsNameChar don't calculate fast... FIX IT
+-- highMaskIsNameChar, lowMaskIsNameChar :: Word64
+-- (highMaskIsNameChar, lowMaskIsNameChar) =
+--     foldl (\(hi,low) char -> (hi `setBit` (char - 64), low `setBit` char)) -- NB: `setBit` can process overflowed values (where char < 64; -- TODO fix it
+--           (0::Word64, 0::Word64)
+--           (map fromIntegral (filter isNameCharOriginal [0..128]))
+-- {-# INLINE highMaskIsNameChar #-}
+-- {-# INLINE lowMaskIsNameChar #-}
+
 -- | Is the character a valid tag/attribute name constituent?
 -- isNameChar1 + '-', '.', '0'-'9'
 isNameChar :: Word8 -> Bool
-isNameChar c =
-  (c >= 97 && c <= 122) || (c >= 65 && c <= 90) || c == 95 || c == 58 ||
-  c == 45 || c == 46 || (c >= 48 && c <= 57)
+isNameChar char = (lowMaskIsNameChar `testBit` char'low) || (highMaskIsNameChar `testBit` char'high)
+   -- TODO 1) change code to use W# instead of Word64
+   --      2) Document `ii - 64` -- there is underflow, but `testBit` can process this!
+  where
+    char'low  = fromIntegral char
+    char'high = fromIntegral (char - 64)
+    highMaskIsNameChar :: Word64
+    highMaskIsNameChar = 0b11111111111111111111111111010000111111111111111111111111110
+    --                     ------------+------------- |    ------------+-------------
+    --                                 |              |                |  bits:
+    --                                 |              |                +-- 65-90
+    --                                 |              +------------------- 95
+    --                                 +---------------------------------- 97-122
+    lowMaskIsNameChar :: Word64
+    lowMaskIsNameChar =  0b11111111111011000000000000000000000000000000000000000000000
+    --                     -----+----- ||
+    --                          |      ||  bits:
+    --                          |      |+-- 45
+    --                          |      +--- 46
+    --                          +---------- 48-58
 {-# INLINE isNameChar #-}
 
 -- | Char for '\''.
