@@ -19,18 +19,18 @@ main = do
   f31kb <- S.readFile "data/text-31kb.xml"
   f211kb <- S.readFile "data/fabricated-211kb.xml"
   mainWith
-    (do func "4kb/hexml/dom" Hexml.parse f4kb
-        func "4kb/xeno/sax" Xeno.SAX.validate f4kb
-        func "4kb/xeno/dom" Xeno.DOM.parse f4kb
-        func "4kb/xeno/dom-with-recovery" Xeno.DOM.Robust.parse f4kb
-        func "31kb/hexml/dom" Hexml.parse f31kb
-        func "31kb/xeno/sax" Xeno.SAX.validate f31kb
-        func "31kb/xeno/dom" Xeno.DOM.parse f31kb
-        func "31kb/xeno/dom-with-recovery" Xeno.DOM.Robust.parse f31kb
-        func "211kb/hexml/dom" Hexml.parse f211kb
-        func "211kb/xeno/sax" Xeno.SAX.validate f211kb
-        func "211kb/xeno/dom" Xeno.DOM.parse f211kb
-        func "211kb/xeno/dom-with-recovery" Xeno.DOM.Robust.parse f211kb)
+    (do func "4kb_hexml_dom" Hexml.parse f4kb
+        func "4kb_xeno_sax" Xeno.SAX.validate f4kb
+        func "4kb_xeno_dom" Xeno.DOM.parse f4kb
+        func "4kb_xeno_dom-with-recovery" Xeno.DOM.Robust.parse f4kb
+        func "31kb_hexml_dom" Hexml.parse f31kb
+        func "31kb_xeno_sax" Xeno.SAX.validate f31kb
+        func "31kb_xeno_dom" Xeno.DOM.parse f31kb
+        func "31kb_xeno_dom-with-recovery" Xeno.DOM.Robust.parse f31kb
+        func "211kb_hexml_dom" Hexml.parse f211kb
+        func "211kb_xeno_sax" Xeno.SAX.validate f211kb
+        func "211kb_xeno_dom" Xeno.DOM.parse f211kb
+        func "211kb_xeno_dom-with-recovery" Xeno.DOM.Robust.parse f211kb)
 
 instance NFData Hexml.Node where
   rnf !_ = ()
