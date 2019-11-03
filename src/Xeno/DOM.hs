@@ -31,12 +31,7 @@ import           Xeno.DOM.Internal
 -- | Parse a complete Nodes document.
 parse :: ByteString -> Either XenoException Node
 parse str =
-  case spork node of
-    Left e -> Left e
-    Right r ->
-      case findRootNode r of
-        Just n -> Right n
-        Nothing -> Left XenoExpectRootNode
+  maybe (Left XenoExpectRootNode) Right . findRootNode =<< spork node
   where
     findRootNode r = go 0
       where
