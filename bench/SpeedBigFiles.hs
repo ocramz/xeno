@@ -23,9 +23,11 @@ import qualified Text.XML.Expat.Tree as HexpatTree
 import qualified Text.XML.Hexml as Hexml
 import           Text.XML.Light as XML
 import           Text.XML.Light.Input as XML
+import qualified Xeno.Types
 import qualified Xeno.SAX
 import qualified Xeno.DOM
 import qualified Xeno.DOM.Robust
+import qualified Data.ByteString as S
 #ifdef LIBXML2
 import qualified Text.XML.LibXML.Parser as Libxml2
 #endif
@@ -45,6 +47,9 @@ main = defaultMain
 allTests :: [String]
 allTests = [ "hexml-dom"
            , "xeno-sax"
+           , "xeno-sax-z"
+           -- , "xeno-sax-ex"
+           -- , "xeno-sax-ex-z"
            , "xeno-dom"
            , "xeno-dom-with-recovery"
            -- XXX: "hexpact", "xml-dom" library don't work with big files; require too much memory
@@ -62,13 +67,16 @@ allExceptHexml = "hexml-dom" `delete` allTests
 benchFile :: [String] -> String -> FilePath -> Benchmark
 benchFile enabledTests size fn =
     env (readBZip2File fn)
-        (bgroup size . benchMethods enabledTests)
+        (\ ~(input, inputz) -> bgroup size $ benchMethods enabledTests input inputz)
 
 
-benchMethods :: [String] -> ByteString -> [Benchmark]
-benchMethods enabledTests input =
+benchMethods :: [String] -> ByteString -> Xeno.Types.ByteStringZeroTerminated -> [Benchmark]
+benchMethods enabledTests input inputz =
        runBench "hexml-dom" (whnf Hexml.parse input)
-    ++ runBench "xeno-sax" (whnf Xeno.SAX.validate input)
+    ++ runBench "xeno-sax"      (whnf Xeno.SAX.validate input)
+    ++ runBench "xeno-sax-z"    (whnf Xeno.SAX.validate inputz)
+    ++ runBench "xeno-sax-ex  " (whnf Xeno.SAX.validateEx input)
+    ++ runBench "xeno-sax-ex-z" (whnf Xeno.SAX.validateEx inputz)
     ++ runBench "xeno-dom" (whnf Xeno.DOM.parse input)
     ++ runBench "xeno-dom-with-recovery" (whnf Xeno.DOM.Robust.parse input)
     ++ runBench
@@ -92,11 +100,12 @@ benchMethods enabledTests input =
         | otherwise                = []
 
 
-readBZip2File :: FilePath -> IO ByteString
+readBZip2File :: FilePath -> IO (ByteString, Xeno.Types.ByteStringZeroTerminated)
 readBZip2File fn = do
     file <- L.readFile ("data" </> "ex" </> fn)
-    let !bs = L.toStrict $ decompress file
-    return bs
+    let !bs  = L.toStrict $ decompress file
+        !bsz = Xeno.Types.BSZT $ bs `S.snoc` 0
+    return (bs, bsz)
 
 
 deriving instance Generic Content

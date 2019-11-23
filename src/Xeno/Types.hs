@@ -31,3 +31,6 @@ data XenoException
 
 instance Exception XenoException where displayException = show
 
+-- | ByteString wich guaranted have '\NUL' at the end
+newtype ByteStringZeroTerminated = BSZT ByteString deriving (Generic, NFData)
+
