@@ -1,5 +1,6 @@
 {-# LANGUAGE BangPatterns        #-}
 {-# LANGUAGE BinaryLiterals      #-}
+{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE MultiWayIf          #-}
 {-# LANGUAGE NamedFieldPuns      #-}
 {-# LANGUAGE OverloadedStrings   #-}
@@ -10,8 +11,10 @@
 module Xeno.SAX
   ( process
   , Process(..)
+  , StringLike(..)
   , fold
   , validate
+  , validateEx
   , dump
   , skipDoctype
   ) where
@@ -27,8 +30,41 @@ import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Unsafe as SU
 import           Data.Char(isSpace)
 import           Data.Functor.Identity
+import           Data.STRef
 import           Data.Word
 import           Xeno.Types
+
+
+class StringLike str where
+    s_index'       :: str -> Int -> Word8
+    elemIndexFrom' :: Word8 -> str -> Int -> Maybe Int
+    drop'          :: Int -> str -> str
+    substring'     :: str -> Int -> Int -> ByteString
+    toBS           :: str -> ByteString
+
+instance StringLike ByteString where
+    s_index'       = s_index
+    {-# INLINE s_index' #-}
+    elemIndexFrom' = elemIndexFrom
+    {-# INLINE elemIndexFrom' #-}
+    drop'          = S.drop
+    {-# INLINE drop' #-}
+    substring'     = substring
+    {-# INLINE substring' #-}
+    toBS           = id
+    {-# INLINE toBS #-}
+
+instance StringLike ByteStringZeroTerminated where
+    s_index' (BSZT ps) n = ps `SU.unsafeIndex` n
+    {-# INLINE s_index' #-}
+    elemIndexFrom' w (BSZT bs) i = elemIndexFrom w bs i
+    {-# INLINE elemIndexFrom' #-}
+    drop' i (BSZT bs) = BSZT $ S.drop i bs
+    {-# INLINE drop' #-}
+    substring' (BSZT bs) s t = substring bs s t
+    {-# INLINE substring' #-}
+    toBS (BSZT bs) = bs
+    {-# INLINE toBS #-}
 
 data Process a =
   Process {
@@ -53,7 +89,7 @@ data Process a =
 --
 -- > > validate "<b"
 -- > False
-validate :: ByteString -> Bool
+validate :: (StringLike str) => str -> Bool
 validate s =
   case spork
          (runIdentity
@@ -69,6 +105,45 @@ validate s =
                s)) of
     Left (_ :: XenoException) -> False
     Right _ -> True
+-- It must be inlined or specialised to ByteString/ByteStringZeroTerminated
+{-# INLINE validate #-}
+{-# SPECIALISE validate :: ByteString -> Bool #-}
+{-# SPECIALISE validate :: ByteStringZeroTerminated -> Bool #-}
+
+
+-- | Parse the XML and checks tags nesting.
+--
+validateEx :: (StringLike str) => str -> Bool
+validateEx s =
+  case spork
+         (runST $ do
+            tags <- newSTRef []
+            (process
+               Process {
+                 openF    = \tag   -> modifySTRef' tags (tag:)
+               , attrF    = \_ _ -> pure ()
+               , endOpenF = \_   -> pure ()
+               , textF    = \_   -> pure ()
+               , closeF   = \tag  ->
+                   modifySTRef' tags $ \case
+                      [] -> fail $ "Unexpected close tag \"" ++ show tag ++ "\""
+                      (expectedTag:tags') ->
+                          if expectedTag == tag
+                          then tags'
+                          else fail $ "Unexpected close tag. Expected \"" ++ show expectedTag ++ "\", but got \"" ++ show tag ++ "\""
+               , cdataF   = \_   -> pure ()
+               }
+               s)
+            readSTRef tags >>= \case
+                [] -> return ()
+                tags' -> fail $ "Not all tags closed: " ++ show tags'
+         ) of
+    Left (_ :: XenoException) -> False
+    Right _ -> True
+{-# INLINE validateEx #-}
+{-# SPECIALISE validateEx :: ByteString -> Bool #-}
+{-# SPECIALISE validateEx :: ByteStringZeroTerminated -> Bool #-}
+
 
 -- | Parse the XML and pretty print it to stdout.
 dump :: ByteString -> IO ()
@@ -129,77 +204,75 @@ fold openF attrF endOpenF textF closeF cdataF s str =
 
 -- | Process events with callbacks in the XML input.
 process
-  :: Monad m
+  :: (Monad m, StringLike str)
   => Process (m ())
-  -> ByteString -> m ()
-process !(Process {openF, attrF, endOpenF, textF, closeF, cdataF}) str' = findLT 0
+  -> str
+  -> m ()
+process !(Process {openF, attrF, endOpenF, textF, closeF, cdataF}) str = findLT 0
   where
-    -- We add \NUL to omit length check in `s_index`
-    -- Also please see https://gitlab.com/migamake/xeno/issues/1
-    str = str' `S.snoc` 0
     findLT index =
-      case elemIndexFrom openTagChar str index of
+      case elemIndexFrom' openTagChar str index of
         Nothing -> unless (S.null text) (textF text)
-          where text = S.drop index str
+          where text = toBS $ drop' index str
         Just fromLt -> do
           unless (S.null text) (textF text)
           checkOpenComment (fromLt + 1)
-          where text = substring str index fromLt
+          where text = substring' str index fromLt
     -- Find open comment, CDATA or tag name.
     checkOpenComment index =
-      if | s_index this 0 == bangChar -- !
-           && s_index this 1 == commentChar -- -
-           && s_index this 2 == commentChar -> -- -
+      if | s_index' this 0 == bangChar -- !
+           && s_index' this 1 == commentChar -- -
+           && s_index' this 2 == commentChar -> -- -
            findCommentEnd (index + 3)
-         | s_index this 0 == bangChar -- !
-           && s_index this 1 == openAngleBracketChar -- [
-           && s_index this 2 == 67 -- C
-           && s_index this 3 == 68 -- D
-           && s_index this 4 == 65 -- A
-           && s_index this 5 == 84 -- T
-           && s_index this 6 == 65 -- A
-           && s_index this 7 == openAngleBracketChar -> -- [
+         | s_index' this 0 == bangChar -- !
+           && s_index' this 1 == openAngleBracketChar -- [
+           && s_index' this 2 == 67 -- C
+           && s_index' this 3 == 68 -- D
+           && s_index' this 4 == 65 -- A
+           && s_index' this 5 == 84 -- T
+           && s_index' this 6 == 65 -- A
+           && s_index' this 7 == openAngleBracketChar -> -- [
            findCDataEnd (index + 8) (index + 8)
          | otherwise ->
            findTagName index
       where
-        this = S.drop index str
+        this = drop' index str
     findCommentEnd index =
-      case elemIndexFrom commentChar str index of
+      case elemIndexFrom' commentChar str index of
         Nothing -> throw $ XenoParseError index "Couldn't find the closing comment dash."
         Just fromDash ->
-          if s_index this 0 == commentChar && s_index this 1 == closeTagChar
+          if s_index' this 0 == commentChar && s_index' this 1 == closeTagChar
             then findLT (fromDash + 2)
             else findCommentEnd (fromDash + 1)
-          where this = S.drop index str
+          where this = drop' index str
     findCDataEnd cdata_start index =
-      case elemIndexFrom closeAngleBracketChar str index of
+      case elemIndexFrom' closeAngleBracketChar str index of
         Nothing -> throw $ XenoParseError index "Couldn't find closing angle bracket for CDATA."
         Just fromCloseAngleBracket ->
-          if s_index str (fromCloseAngleBracket + 1) == closeAngleBracketChar
+          if s_index' str (fromCloseAngleBracket + 1) == closeAngleBracketChar
              then do
-               cdataF (substring str cdata_start fromCloseAngleBracket)
+               cdataF (substring' str cdata_start fromCloseAngleBracket)
                findLT (fromCloseAngleBracket + 3) -- Start after ]]>
              else
                -- We only found one ], that means that we need to keep searching.
                findCDataEnd cdata_start (fromCloseAngleBracket + 1)
     findTagName index0 =
       let spaceOrCloseTag = parseName str index
-      in if | s_index str index0 == questionChar ->
-              case elemIndexFrom closeTagChar str spaceOrCloseTag of
+      in if | s_index' str index0 == questionChar ->
+              case elemIndexFrom' closeTagChar str spaceOrCloseTag of
                 Nothing -> throw $ XenoParseError index "Couldn't find the end of the tag."
                 Just fromGt -> do
                   findLT (fromGt + 1)
-            | s_index str spaceOrCloseTag == closeTagChar ->
-              do let tagname = substring str index spaceOrCloseTag
-                 if s_index str index0 == slashChar
+            | s_index' str spaceOrCloseTag == closeTagChar ->
+              do let tagname = substring' str index spaceOrCloseTag
+                 if s_index' str index0 == slashChar
                    then closeF tagname
                    else do
                      openF tagname
                      endOpenF tagname
                  findLT (spaceOrCloseTag + 1)
             | otherwise ->
-              do let tagname = substring str index spaceOrCloseTag
+              do let tagname = substring' str index spaceOrCloseTag
                  openF tagname
                  result <- findAttributes spaceOrCloseTag
                  endOpenF tagname
@@ -210,22 +283,22 @@ process !(Process {openF, attrF, endOpenF, textF, closeF, cdataF}) str' = findLT
                      findLT (closingPair + 2)
       where
         index =
-          if s_index str index0 == slashChar
+          if s_index' str index0 == slashChar
             then index0 + 1
             else index0
     findAttributes index0 =
-      if s_index str index == slashChar &&
-         s_index str (index + 1) == closeTagChar
+      if s_index' str index == slashChar &&
+         s_index' str (index + 1) == closeTagChar
         then pure (Left index)
-        else if s_index str index == closeTagChar
+        else if s_index' str index == closeTagChar
                then pure (Right index)
                else let afterAttrName = parseName str index
-                    in if s_index str afterAttrName == equalChar
+                    in if s_index' str afterAttrName == equalChar
                          then let quoteIndex = afterAttrName + 1
-                                  usedChar = s_index str quoteIndex
+                                  usedChar = s_index' str quoteIndex
                               in if usedChar == quoteChar ||
                                     usedChar == doubleQuoteChar
-                                   then case elemIndexFrom
+                                   then case elemIndexFrom'
                                                usedChar
                                                str
                                                (quoteIndex + 1) of
@@ -234,15 +307,15 @@ process !(Process {openF, attrF, endOpenF, textF, closeF, cdataF}) str' = findLT
                                               (XenoParseError index "Couldn't find the matching quote character.")
                                           Just endQuoteIndex -> do
                                             attrF
-                                              (substring str index afterAttrName)
-                                              (substring
+                                              (substring' str index afterAttrName)
+                                              (substring'
                                                  str
                                                  (quoteIndex + 1)
                                                  (endQuoteIndex))
                                             findAttributes (endQuoteIndex + 1)
                                    else throw
                                          (XenoParseError index("Expected ' or \", got: " <> S.singleton usedChar))
-                         else throw (XenoParseError index ("Expected =, got: " <> S.singleton (s_index str afterAttrName) <> " at character index: " <> (S8.pack . show) afterAttrName))
+                         else throw (XenoParseError index ("Expected =, got: " <> S.singleton (s_index' str afterAttrName) <> " at character index: " <> (S8.pack . show) afterAttrName))
       where
         index = skipSpaces str index0
 {-# INLINE process #-}
@@ -254,6 +327,14 @@ process !(Process {openF, attrF, endOpenF, textF, closeF, cdataF}) str' = findLT
                #-}
 {-# SPECIALISE process :: Process (IO ()) -> ByteString -> IO ()
                #-}
+{-# SPECIALISE process :: Process (Identity ()) -> ByteStringZeroTerminated -> Identity ()
+               #-}
+{-# SPECIALISE process :: Process (State s ()) -> ByteStringZeroTerminated -> State s ()
+               #-}
+{-# SPECIALISE process :: Process (ST s ()) -> ByteStringZeroTerminated -> ST s ()
+               #-}
+{-# SPECIALISE process :: Process (IO ()) -> ByteStringZeroTerminated -> IO ()
+               #-}
 
 --------------------------------------------------------------------------------
 -- ByteString utilities
@@ -261,19 +342,15 @@ process !(Process {openF, attrF, endOpenF, textF, closeF, cdataF}) str' = findLT
 -- | /O(1)/ 'ByteString' index (subscript) operator, starting from 0.
 s_index :: ByteString -> Int -> Word8
 s_index ps n
-    -- 1) `n` is always non-negative;
-    -- 2) parser will stop on last `\NUL` (added in `process`) so we don't need to check crossing string boundary.
-    --    Also please see https://gitlab.com/migamake/xeno/issues/1
-    --
-    -- | n < 0            = throw (XenoStringIndexProblem n ps)
-    -- | n >= S.length ps = throw (XenoStringIndexProblem n ps)
-    | otherwise      = ps `SU.unsafeIndex` n
+    | n < 0            = throw (XenoStringIndexProblem n ps)
+    | n >= S.length ps = throw (XenoStringIndexProblem n ps)
+    | otherwise        = ps `SU.unsafeIndex` n
 {-# INLINE s_index #-}
 
 -- | A fast space skipping function.
-skipSpaces :: ByteString -> Int -> Int
+skipSpaces :: (StringLike str) => str -> Int -> Int
 skipSpaces str i =
-  if isSpaceChar (s_index str i)
+  if isSpaceChar (s_index' str i)
     then skipSpaces str (i + 1)
     else i
 {-# INLINE skipSpaces #-}
@@ -284,17 +361,17 @@ substring s start end = S.take (end - start) (S.drop start s)
 {-# INLINE substring #-}
 
 -- | Basically @findIndex (not . isNameChar)@, but doesn't allocate.
-parseName :: ByteString -> Int -> Int
+parseName :: (StringLike str) => str -> Int -> Int
 parseName str index =
-  if not (isNameChar1 (s_index str index))
+  if not (isNameChar1 (s_index' str index))
      then index
      else parseName' str (index + 1)
 {-# INLINE parseName #-}
 
 -- | Basically @findIndex (not . isNameChar)@, but doesn't allocate.
-parseName' :: ByteString -> Int -> Int
+parseName' :: (StringLike str) => str -> Int -> Int
 parseName' str index =
-  if not (isNameChar (s_index str index))
+  if not (isNameChar (s_index' str index))
      then index
      else parseName' str (index + 1)
 {-# INLINE parseName' #-}
