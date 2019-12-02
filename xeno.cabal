@@ -29,12 +29,12 @@ library
   exposed-modules: Xeno.SAX, Xeno.DOM, Xeno.Types, Xeno.Errors 
   other-modules: Control.Spork
   build-depends: base >= 4.7 && < 5
-               , bytestring
-               , vector
-               , deepseq
-               , array
-               , mutable-containers
-               , mtl
+               , bytestring >= 0.10.8
+               , vector >= 0.11
+               , deepseq >= 1.4.2
+               , array >= 0.5.1
+               , mutable-containers >= 0.3.3
+               , mtl >= 2.2.1
                -- , exceptions
                -- | DEBUG 
                , hspec
