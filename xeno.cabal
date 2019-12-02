@@ -10,7 +10,7 @@ license: BSD3
 license-file: LICENSE
 author: Christopher Done
 maintainer: Marco Zocca (ocramz fripost org)
-tested-with:         GHC == 8.0.1, GHC == 8.2.2, GHC == 8.4.2, GHC == 8.4.4
+tested-with:         GHC == 8.0.1, GHC == 8.2.2, GHC == 8.4.2, GHC == 8.4.4, GHC == 8.6.5
 extra-source-files:  README.md
                      CHANGELOG.markdown
                      CONTRIBUTORS.md                             
@@ -35,9 +35,6 @@ library
                , array >= 0.5.1
                , mutable-containers >= 0.3.3
                , mtl >= 2.2.1
-               -- , exceptions
-               -- | DEBUG 
-               , hspec
   default-language: Haskell2010
 
 test-suite xeno-test
