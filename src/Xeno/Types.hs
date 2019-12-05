@@ -12,7 +12,6 @@ import Control.DeepSeq
 import Control.Exception
 import Data.ByteString.Char8 (ByteString, pack)
 import Data.Data
-import Data.Typeable
 import GHC.Generics
 
 #if MIN_VERSION_base(4,9,0)

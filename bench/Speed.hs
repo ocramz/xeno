@@ -18,7 +18,6 @@ import qualified Text.XML.Expat.SAX as Hexpat
 import qualified Text.XML.Expat.Tree as HexpatTree
 import qualified Text.XML.Hexml as Hexml
 import           Text.XML.Light as XML
-import           Text.XML.Light.Input as XML
 import qualified Xeno.SAX
 import qualified Xeno.Types
 import qualified Xeno.DOM
