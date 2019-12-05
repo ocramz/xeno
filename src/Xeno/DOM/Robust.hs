@@ -19,10 +19,7 @@ module Xeno.DOM.Robust
 import           Control.Monad.ST
 import           Control.Spork
 import           Data.ByteString.Internal(ByteString(..))
-import qualified Data.ByteString             as S
-import           Data.Data                (Data, Typeable)
 import           Data.STRef
-import           Data.Vector.Unboxed      ((!))
 import qualified Data.Vector.Unboxed         as UV
 import qualified Data.Vector.Unboxed.Mutable as UMV
 import           Data.Mutable(asURef, newRef, readRef, writeRef)

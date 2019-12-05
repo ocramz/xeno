@@ -16,13 +16,9 @@ module Xeno.DOM.Internal
 import           Control.DeepSeq
 import           Data.ByteString          (ByteString)
 import qualified Data.ByteString as S
-import           Data.ByteString.Internal (ByteString(..))
 import           Data.Data                (Data, Typeable)
-import           Data.Mutable
-import           Data.STRef
 import           Data.Vector.Unboxed      ((!))
 import qualified Data.Vector.Unboxed as UV
-import qualified Data.Vector.Unboxed.Mutable as UMV
 
 --import Debug.Trace
 --trace _ a = a
