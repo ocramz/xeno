@@ -30,6 +30,7 @@ import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Unsafe as SU
 import           Data.Char(isSpace)
 import           Data.Functor.Identity
+import           Data.Semigroup
 import           Data.STRef
 import           Data.Word
 import           Xeno.Types
