@@ -1,14 +1,10 @@
-{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE BangPatterns #-}
-import Control.DeepSeq
-import Control.Exception (evaluate)
+{-# LANGUAGE QuasiQuotes  #-}
 import Control.Monad
 import Data.Time.Clock
 import System.IO.Posix.MMap
 import System.Mem
-import Text.InterpolatedString.Perl6 (qc)
 import Xeno.DOM
-import Xeno.SAX
 import qualified Data.ByteString as BS
 
 
@@ -23,29 +19,27 @@ main = do
                 -- , {-  21 Gb -} "enwiki-20190901-pages-meta-history2.xml"
                 ]
         files = concat $ replicate 5 files'
-        -- Benchmark with a lot of attributes:
-        -- files = map (prefix ++) [ {- 1.6 Gb -} "enwiki-20190901-pages-logging1.xml" ]
     --
     deltas <- forM files $ \fn -> do
-        putStrLn [qc|Processing file '{fn}'|]
+        putStrLn $ "Processing file '" ++ show fn ++ "'"
         --
         -- NOTE: It is need to cache file in memory BEFORE start test.
         --       It can be done with `vmtouch` utility for example (`vmtouch -vtL *`).
         --
         bs <- unsafeMMapFile fn
         -- bs <- BS.readFile fn
-        putStrLn [qc|  size: {BS.length bs `div` (1024*1024)} Mb|]
+        putStrLn $ "  size: " ++ show (BS.length bs `div` (1024*1024)) ++ " Mb"
         performGC
         start <- getCurrentTime
         -- SAX:
         -- let res = validate bs
         -- putStrLn [qc|  process result: {res}|]
         -- DOM:
-        (\(Right !_node) -> putStrLn [qc|  processed!|]) (parse bs)
+        (\(Right !_node) -> putStrLn "  processed!") (parse bs)
         finish <- getCurrentTime
         let delta = finish `diffUTCTime` start
-        putStrLn [qc|  processing time: {delta}|]
+        putStrLn $ "  processing time: " ++ show delta
         return delta
     --
     putStrLn "------"
-    putStrLn [qc|Total: {sum deltas}|]
+    putStrLn $ "Total: " ++ show (sum deltas)
