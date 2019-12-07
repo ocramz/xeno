@@ -24,19 +24,19 @@ download () {
 mkdir --parents $OUTDIR
 
 #  46Mb:
-#download "enwiki-20190901-pages-articles14.xml-p7697599p7744799.bz2"
+download "enwiki-20190901-pages-articles14.xml-p7697599p7744799.bz2"
 
 # 624Mb:
-#download "enwiki-20190901-pages-articles-multistream1.xml-p10p30302.bz2"
+download "enwiki-20190901-pages-articles-multistream1.xml-p10p30302.bz2"
 
 # 1.6Gb:
-#download "enwiki-20190901-pages-meta-current6.xml-p565314p892912.bz2"
+download "enwiki-20190901-pages-meta-current6.xml-p565314p892912.bz2"
 
 # 4Gb:
-#download "enwiki-20190901-pages-meta-current24.xml-p30503451p32003451.bz2"
+download "enwiki-20190901-pages-meta-current24.xml-p30503451p32003451.bz2"
 
 # 21GB:
-#download "enwiki-20190901-pages-meta-history2.xml-p31255p31720.bz2"
+download "enwiki-20190901-pages-meta-history2.xml-p31255p31720.bz2"
 
 #
 # Special case, XML with a small tag contents
