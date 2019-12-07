@@ -1,5 +1,5 @@
 name: xeno
-version: 1.0.0.0
+version: 0.3.5.2
 synopsis: A fast event-based XML parser in pure Haskell
 description: A fast, low-memory use, event-based XML parser in pure Haskell.  
 build-type: Simple
@@ -10,7 +10,7 @@ license: BSD3
 license-file: LICENSE
 author: Christopher Done
 maintainer: Marco Zocca (ocramz fripost org)
-tested-with:         GHC == 8.0.1, GHC == 8.2.2, GHC == 8.4.2, GHC == 8.4.4
+tested-with:         GHC == 8.0.1, GHC == 8.2.2, GHC == 8.4.2, GHC == 8.4.4, GHC == 8.6.5
 extra-source-files:  README.md
                      CHANGELOG.markdown
                      CONTRIBUTORS.md                             
@@ -26,17 +26,15 @@ flag libxml2
 library
   hs-source-dirs: src
   ghc-options: -Wall -O2
-  exposed-modules: Xeno.SAX, Xeno.DOM, Xeno.Types, Xeno.Errors, Xeno.DOM.Robust
-  other-modules: Control.Spork, Xeno.DOM.Internal
+  exposed-modules: Xeno.SAX, Xeno.DOM, Xeno.Types, Xeno.Errors 
+  other-modules: Control.Spork
   build-depends: base >= 4.7 && < 5
-               , bytestring
-               , vector
-               , deepseq
-               , mutable-containers
-               , mtl
-               -- , exceptions
-               -- | DEBUG 
-               -- , hspec
+               , bytestring >= 0.10.8
+               , vector >= 0.11
+               , deepseq >= 1.4.2
+               , array >= 0.5.1
+               , mutable-containers >= 0.3.3
+               , mtl >= 2.2.1
   default-language: Haskell2010
 
 test-suite xeno-test
@@ -45,6 +43,8 @@ test-suite xeno-test
   hs-source-dirs: test
   main-is: Main.hs
   build-depends: base, xeno, hexml, hspec, bytestring
+               -- | DEBUG 
+               , hspec
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   default-language: Haskell2010
 
@@ -55,8 +55,7 @@ benchmark xeno-speed-bench
   build-depends: base, xeno, hexml, criterion, bytestring, deepseq, ghc-prim, xml, hexpat
   if flag(libxml2)
     build-depends: libxml
-  -- ghc-options: -Wall -threaded -rtsopts -O2 -with-rtsopts=-N
-  ghc-options: -Wall -O2 -rtsopts
+  ghc-options: -Wall -rtsopts -with-rtsopts=-N -O2
   if flag(libxml2)
      cpp-options: -DLIBXML2   
      -- ghc-options: -DLIBXML2  -- Hackage started complaining about this
@@ -67,8 +66,7 @@ benchmark xeno-memory-bench
   hs-source-dirs: bench
   main-is: Memory.hs
   build-depends: base, xeno, weigh, bytestring, deepseq, hexml
-  -- ghc-options: -Wall -threaded -O2 -rtsopts -with-rtsopts=-N
-  ghc-options: -Wall -O2 -rtsopts
+  ghc-options: -Wall -threaded -O2 -rtsopts -with-rtsopts=-N
   default-language: Haskell2010
 
 benchmark xeno-speed-big-files-bench
@@ -79,7 +77,6 @@ benchmark xeno-speed-big-files-bench
   if flag(libxml2)
     build-depends: libxml
   ghc-options: -Wall -O2 -rtsopts "-with-rtsopts=-H10G -AL1G -A256m -M25G"
-  -- ghc-options: -Wall -O2 -threaded -rtsopts "-with-rtsopts=-N -H10G -AL1G -A256m -M25G"
   if flag(libxml2)
      cpp-options: -DLIBXML2
   default-language: Haskell2010

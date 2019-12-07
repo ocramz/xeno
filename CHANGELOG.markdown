@@ -1,3 +1,6 @@
+	0.3.5.2
+	* Fix dependency lower bounds (GHC 8.0.1 is the earliest version currently supported)
+
 	0.3.5
 	* Improve error handling (#24 #26, mgajda)
 
