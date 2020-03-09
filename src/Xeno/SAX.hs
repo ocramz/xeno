@@ -67,6 +67,7 @@ instance StringLike ByteStringZeroTerminated where
     toBS (BSZT bs) = bs
     {-# INLINE toBS #-}
 
+-- | Parameters to the 'process' function
 data Process a =
   Process {
       openF    :: !(ByteString ->               a) -- ^ Open tag.

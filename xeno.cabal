@@ -1,5 +1,5 @@
 name: xeno
-version: 0.3.5.2
+version: 0.4
 synopsis: A fast event-based XML parser in pure Haskell
 description: A fast, low-memory use, event-based XML parser in pure Haskell.  
 build-type: Simple
