@@ -4,7 +4,7 @@
 
 -- | Using the SAX parser, provide a simple tree interface.
 
-module Xeno.Tree where
+module Xeno.Tree(Node(..), render, parse) where
 
 import Control.DeepSeq
 import Data.ByteString (ByteString)
