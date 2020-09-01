@@ -82,7 +82,8 @@ benchmark xeno-speed-big-files-bench
      cpp-options: -DLIBXML2
   default-language: Haskell2010
 
-executable xeno-bench
+benchmark xeno-bench
+  type: exitcode-stdio-1.0
   main-is: Bench.hs
   hs-source-dirs: app
   build-depends: base, xeno, weigh, bytestring, deepseq, hexml, bytestring-mmap, time
