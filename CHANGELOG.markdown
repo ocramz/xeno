@@ -1,3 +1,6 @@
+    0.4.2
+    * all benchmarks marked as such in the Cabal file
+    
     0.4
     * A number of optimizations and some changes in ergonomics. Thanks to Dmitry Krylov (dmalkr) and Michal Gajda (mgajda) !
     * breaking API changes : 

@@ -5,7 +5,7 @@
 {-# LANGUAGE NamedFieldPuns      #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-
+{-# options_ghc -Wno-unused-imports #-}
 -- | SAX parser and API for XML.
 
 module Xeno.SAX
