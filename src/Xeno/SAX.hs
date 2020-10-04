@@ -192,12 +192,12 @@ fold openF attrF endOpenF textF closeF cdataF s str =
   spork
     (execState
        (process Process {
-            openF    = \name -> modify (\s' -> openF s' name)
-          , attrF    = \key value -> modify (\s' -> attrF s' key value)
-          , endOpenF = \name -> modify (\s' -> endOpenF s' name)
-          , textF    = \text -> modify (\s' -> textF s' text)
-          , closeF   = \name -> modify (\s' -> closeF s' name)
-          , cdataF   = \cdata -> modify (\s' -> cdataF s' cdata)
+            openF    = \name -> modify' (\s' -> openF s' name)
+          , attrF    = \key value -> modify' (\s' -> attrF s' key value)
+          , endOpenF = \name -> modify' (\s' -> endOpenF s' name)
+          , textF    = \text -> modify' (\s' -> textF s' text)
+          , closeF   = \name -> modify' (\s' -> closeF s' name)
+          , cdataF   = \cdata -> modify' (\s' -> cdataF s' cdata)
         } str)
        s)
 
