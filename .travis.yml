@@ -14,9 +14,9 @@ addons:
 # change flags or use --stack-yaml to point to a different file.
 env:
 - ARGS="--resolver lts"
+- ARGS="--resolver lts --flag xeno:whitespace-around-equals"
 - ARGS="--resolver nightly"
 - ARGS="--resolver lts-7.2"
-
 
 before_install:
 # Download and unpack the stack executable
