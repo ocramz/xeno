@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 -- | Simple test suite.
@@ -45,8 +46,13 @@ spec = do
   describe
     "hexml tests"
     (do mapM_
-          (\(v, i) -> it (show i) (shouldBe (validate i) v))
-          (hexml_examples_sax  ++ extra_examples_sax  ++ ws_around_equals_sax)
+          (\(v, i) -> it (show i) (shouldBe (validate i) v)) $ concat
+          [ hexml_examples_sax
+          , extra_examples_sax
+#ifdef WHITESPACE_AROUND_EQUALS
+          , ws_around_equals_sax
+#endif
+          ]
         mapM_
           (\(v, i) -> it (show i) (shouldBe (either (Left . show) (Right . id) (contents <$> parse i)) v))
           cdata_tests
