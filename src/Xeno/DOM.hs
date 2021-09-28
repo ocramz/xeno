@@ -138,7 +138,9 @@ parse str =
                 --
                 -- predictGrowSize _bsStart _bsLen _index vecLen = round $ fromIntegral vecLen * (1.25 :: Double)
                 predictGrowSize bsStart bsLen index vecLen =
-                    let processedLen = bsStart + bsLen - offset0
+                    let -- at least 1 so we don't divide by zero below and end up with 
+                        -- a negative grow size if (bsStart + bsLen - offset0) == 0
+                        processedLen = max 1 (bsStart + bsLen - offset0)
                         -- 1. Using integral operations, such as
                         --    "predictedTotalSize = (index * S.length str) `div` processedLen"
                         --    cause overflow, so we use float.
