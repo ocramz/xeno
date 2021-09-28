@@ -1,3 +1,9 @@
+    0.4.3
+    * Ensure we don't grow with a negative size in DOM parser (#48)
+    * Flatten code nesting in process function (#45)
+    * Introduce a whitespace-around-equals CPP flag (#44)
+    * Use modify' instead of modify in fold (#42)
+
     0.4.2
     * all benchmarks marked as such in the Cabal file
     
