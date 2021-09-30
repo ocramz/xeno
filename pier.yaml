@@ -1,0 +1,10 @@
+# resolver: lts-7.24
+resolver: lts-11.8
+# resolver: nightly-2018-05-10
+packages:
+- .
+extra-deps:
+- hexpat-0.20.9
+- List-0.5.2
+- libxml-0.1.1
+- hexml

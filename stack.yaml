@@ -1,9 +1,13 @@
 # resolver: lts-7.24
-resolver: lts-11.8
-# resolver: nightly-2018-05-10
+# resolver: lts-11.8
+# resolver: lts-12.26
+resolver: lts-13.30
+packages:
+- .
 extra-deps:
 - git: https://github.com/chrisdone/hexml.git
   commit: 22923b55ca7390f1973ddfd0d0e517f13cf8a8a4
-- hexpat-0.20.9
-- List-0.5.2
+- bytestring-mmap-0.2.2@sha256:d04e6bc5a158dd292757d3b9b032beb8a2c43e768777d64a8289abf89f612f67
+- hexpat-0.20.13
+- List-0.6.2
 - libxml-0.1.1
