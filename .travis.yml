@@ -22,6 +22,7 @@ env:
 - ARGS="--resolver lts-7.2"
 - ARGS="--resolver lts-12.20"
 - ARGS="--resolver lts-13.30"
+- ARGS="--resolver lts --flag xeno:whitespace-around-equals"
 
 before_install:
 # Download and unpack the stack executable

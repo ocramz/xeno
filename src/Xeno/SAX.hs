@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns        #-}
 {-# LANGUAGE BinaryLiterals      #-}
 {-# LANGUAGE LambdaCase          #-}
@@ -316,7 +317,11 @@ process !(Process {openF, attrF, endOpenF, textF, closeF, cdataF}) str = findLT 
             findAttributes (endQuoteIndex + 1)
 
       -- case: attr= without following quote
+#ifdef WHITESPACE_AROUND_EQUALS
+      | s_index' str beforeEquals == equalChar
+#else
       | s_index' str afterAttrName == equalChar
+#endif
       = throw (XenoParseError index("Expected ' or \", got: " <> S.singleton usedChar))
 
       | otherwise
@@ -324,7 +329,12 @@ process !(Process {openF, attrF, endOpenF, textF, closeF, cdataF}) str = findLT 
       where
         index = skipSpaces str index0
         afterAttrName = parseName str index
+#ifdef WHITESPACE_AROUND_EQUALS
+        beforeEquals = skipSpaces str afterAttrName
+        quoteIndex = skipSpaces str (beforeEquals + 1)
+#else
         quoteIndex = afterAttrName + 1
+#endif
         usedChar = s_index' str quoteIndex
 
 {-# INLINE process #-}
