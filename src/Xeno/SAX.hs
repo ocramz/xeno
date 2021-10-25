@@ -317,22 +317,18 @@ process !(Process {openF, attrF, endOpenF, textF, closeF, cdataF}) str = findLT 
             findAttributes (endQuoteIndex + 1)
 
       -- case: attr= without following quote
-#ifdef WHITESPACE_AROUND_EQUALS
-      | s_index' str beforeEquals == equalChar
-#else
       | s_index' str afterAttrName == equalChar
-#endif
       = throw (XenoParseError index("Expected ' or \", got: " <> S.singleton usedChar))
 
       | otherwise
       = throw (XenoParseError index ("Expected =, got: " <> S.singleton (s_index' str afterAttrName) <> " at character index: " <> (S8.pack . show) afterAttrName))
       where
         index = skipSpaces str index0
-        afterAttrName = parseName str index
 #ifdef WHITESPACE_AROUND_EQUALS
-        beforeEquals = skipSpaces str afterAttrName
-        quoteIndex = skipSpaces str (beforeEquals + 1)
+        afterAttrName = skipSpaces str (parseName str index)
+        quoteIndex = skipSpaces str (afterAttrName + 1)
 #else
+        afterAttrName = parseName str index
         quoteIndex = afterAttrName + 1
 #endif
         usedChar = s_index' str quoteIndex
