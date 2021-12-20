@@ -17,6 +17,9 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
+            stack-yaml: stack-ghc9.2.yaml
+            extra-args: ""
+          - os: ubuntu-latest
             stack-yaml: stack.yaml
             extra-args: ""
           - os: ubuntu-latest
