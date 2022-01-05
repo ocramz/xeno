@@ -50,7 +50,7 @@ parse inp =
           _ -> Nothing
 #if MIN_VERSION_bytestring(0,11,0)
     PS _ offset _ = str
-    offset0 = offset + 1
+    offset0 = offset
 #else
     PS _ offset0 _ = str
 # endif
@@ -65,7 +65,11 @@ parse inp =
                 openF = \x@(PS _ name_start name_len) -> do
                  let tag = 0x00
                      tag_end = -1
+#if MIN_VERSION_bytestring(0,11,0)
+                 index <- trace ("out process " <> show x) $ readRef sizeRef
+#else
                  index <- trace ("in process " <> show x) $ readRef sizeRef
+# endif
                  v' <-
                    do v <- readSTRef vecRef
                       if index + 5 < UMV.length v
@@ -79,7 +83,11 @@ parse inp =
                     writeRef sizeRef (index + 5)
                     UMV.write v' index tag
                     UMV.write v' (index + 1) tag_parent
+#if MIN_VERSION_bytestring(0,11,0)
+                    UMV.write v' (index + 2) 1
+#else
                     UMV.write v' (index + 2) (name_start - offset0)
+# endif
                     UMV.write v' (index + 3) name_len
                     UMV.write v' (index + 4) tag_end
               , attrF = \(PS _ key_start key_len) (PS _ value_start value_len) -> do
