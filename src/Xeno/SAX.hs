@@ -34,6 +34,7 @@ import           Data.Semigroup
 import           Data.STRef
 import           Data.Word
 import           Xeno.Types
+import Debug.Trace
 
 
 class StringLike str where
@@ -206,12 +207,13 @@ fold openF attrF endOpenF textF closeF cdataF s str =
 
 -- | Process events with callbacks in the XML input.
 process
-  :: (Monad m, StringLike str)
+  ::  forall m str . (Monad m, StringLike str)
   => Process (m ())
   -> str
   -> m ()
 process !(Process {openF, attrF, endOpenF, textF, closeF, cdataF}) str = findLT 0
   where
+    findLT :: Int -> m ()
     findLT index =
       case elemIndexFrom' openTagChar str index of
         Nothing -> unless (S.null text) (textF text)
@@ -221,6 +223,7 @@ process !(Process {openF, attrF, endOpenF, textF, closeF, cdataF}) str = findLT 
           checkOpenComment (fromLt + 1)
           where text = substring' str index fromLt
     -- Find open comment, CDATA or tag name.
+    checkOpenComment :: Int -> m ()
     checkOpenComment index
       | s_index' this 0 == bangChar -- !
       , s_index' this 1 == commentChar -- -
@@ -260,23 +263,24 @@ process !(Process {openF, attrF, endOpenF, textF, closeF, cdataF}) str = findLT 
              else
                -- We only found one ], that means that we need to keep searching.
                findCDataEnd cdata_start (fromCloseAngleBracket + 1)
+    findTagName :: Int -> m ()
     findTagName index0
-      | s_index' str index0 == questionChar =
+      | s_index' str index0 == questionChar = trace "q" $
         case elemIndexFrom' closeTagChar str spaceOrCloseTag of
           Nothing -> throw $ XenoParseError index "Couldn't find the end of the tag."
           Just fromGt -> do
             findLT (fromGt + 1)
-      | s_index' str spaceOrCloseTag == closeTagChar = do
+      | s_index' str spaceOrCloseTag == closeTagChar = trace ("ix " <> show (toBS str)) $ do
         let tagname = substring' str index spaceOrCloseTag
         if s_index' str index0 == slashChar
           then closeF tagname
           else do
-            openF tagname
+            trace ("nya " <> show tagname) $ openF tagname
             endOpenF tagname
         findLT (spaceOrCloseTag + 1)
-      | otherwise = do
+      | otherwise = trace ("otherwise" <> show (toBS str)) $ do
         let tagname = substring' str index spaceOrCloseTag
-        openF tagname
+        trace ("nya2 " <> show tagname) $ openF tagname
         result <- findAttributes spaceOrCloseTag
         endOpenF tagname
         case result of

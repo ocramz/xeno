@@ -3,6 +3,7 @@
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE CPP #-}
 -- | DOM parser and API for XML.
 --   Slightly slower DOM parsing,
 --   but add missing close tags.
@@ -16,6 +17,7 @@ module Xeno.DOM.Robust
   , children
   ) where
 
+import Debug.Trace
 import           Control.Monad.ST
 import           Control.Spork
 import           Data.ByteString.Internal(ByteString(..))
@@ -26,6 +28,7 @@ import           Data.Mutable(asURef, newRef, readRef, writeRef)
 import           Xeno.SAX
 import           Xeno.Types
 import           Xeno.DOM.Internal(Node(..), Content(..), name, attributes, contents, children)
+
 
 -- | Parse a complete Nodes document.
 parse :: ByteString -> Either XenoException Node
@@ -45,7 +48,12 @@ parse inp =
           -- characters
           Just 0x1 -> go (n+3)
           _ -> Nothing
+#if MIN_VERSION_bytestring(0,11,0)
+    PS _ offset _ = str
+    offset0 = offset + 1
+#else
     PS _ offset0 _ = str
+# endif
     str = skipDoctype inp
     node =
       runST
@@ -54,10 +62,10 @@ parse inp =
             sizeRef   <- fmap asURef $ newRef 0
             parentRef <- fmap asURef $ newRef 0
             process Process {
-                openF = \(PS _ name_start name_len) -> do
+                openF = \x@(PS _ name_start name_len) -> do
                  let tag = 0x00
                      tag_end = -1
-                 index <- readRef sizeRef
+                 index <- trace ("in process " <> show x) $ readRef sizeRef
                  v' <-
                    do v <- readSTRef vecRef
                       if index + 5 < UMV.length v

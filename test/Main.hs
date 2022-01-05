@@ -6,6 +6,7 @@
 
 module Main where
 
+import qualified Data.Text.Encoding as T
 import           Data.Either (isRight)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
@@ -15,6 +16,9 @@ import           Xeno.DOM  (Node, Content(..), parse, name, contents, attributes
 import qualified Xeno.DOM.Robust as RDOM
 import           Xeno.Types
 import qualified Debug.Trace as Debug(trace)
+import Numeric (showHex, showIntAtBase, showInt)
+import Data.Char (intToDigit)
+
 
 main :: IO ()
 main = hspec spec
@@ -86,6 +90,23 @@ spec = do
     it "DOM from bytestring substring" $ do
         let substr = BS.drop 5 "5<8& <valid>xml<here/></valid>"
             parsedRoot = fromRightE $ RDOM.parse substr
+        print "JAAAAAAAAAAAAAAAAAAAAPIE"
+        let
+          x :: ByteString
+          x = ">"
+
+          y :: ByteString
+          y = T.encodeUtf8 ">"
+
+          z :: ByteString
+          z = T.encodeUtf16LE ">"
+
+        let fun = flip showInt ""
+              -- fun = flip (showIntAtBase 2 intToDigit) ""
+
+        print $ (fun <$> BS.unpack x)
+        print $ (fun <$> BS.unpack y)
+        print $ (fun <$> BS.unpack z)
         name parsedRoot `shouldBe` "valid"
 
     it "Leading whitespace characters are accepted by parse" $ 

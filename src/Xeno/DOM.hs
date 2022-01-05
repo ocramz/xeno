@@ -42,6 +42,7 @@ parse str =
           Just 0x1 -> go (n+3)
           _        -> Nothing
     PS _ offset0 _ = str
+    node :: UV.Vector Int
     node =
       let !initialSize = max 1000 (S.length str `div` 8) in
       runST
