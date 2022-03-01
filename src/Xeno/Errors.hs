@@ -34,6 +34,7 @@ bshow :: Show a => a -> BS.ByteString
 bshow = BS.pack . show
 
 {-# INLINE CONLIKE getStartIndex #-}
+-- FIXME remove this; there's no offset in the bytestring.
 getStartIndex :: BS.ByteString -> Int
 getStartIndex (PS _ from _) = from
 
@@ -54,8 +55,9 @@ displayException _      err                        = bshow err
 
 -- | Take n last bytes.
 revTake :: Int -> BS.ByteString -> BS.ByteString
-revTake i (PS ptr from to) = PS ptr (end-len) len
+revTake i bs =
+    if i >= len
+    then bs
+    else BS.drop (len - i) bs
   where
-    end = from + to
-    len = min to i
-
+    len = fromIntegral (BS.length bs)

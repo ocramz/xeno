@@ -18,11 +18,14 @@ module Xeno.DOM.Robust
 
 import           Control.Monad.ST
 import           Control.Spork
-import           Data.ByteString.Internal(ByteString(..))
+import           Data.ByteString.Internal as BS (ByteString(..), plusForeignPtr)
 import           Data.STRef
 import qualified Data.Vector.Unboxed         as UV
 import qualified Data.Vector.Unboxed.Mutable as UMV
 import           Data.Mutable(asURef, newRef, readRef, writeRef)
+import           Foreign.Ptr (minusPtr)
+import           Foreign.ForeignPtr (ForeignPtr, withForeignPtr)
+import           System.IO.Unsafe (unsafeDupablePerformIO)
 import           Xeno.SAX
 import           Xeno.Types
 import           Xeno.DOM.Internal(Node(..), Content(..), name, attributes, contents, children)
@@ -45,7 +48,7 @@ parse inp =
           -- characters
           Just 0x1 -> go (n+3)
           _ -> Nothing
-    PS _ offset0 _ = str
+    BS offset0 _ = str
     str = skipDoctype inp
     node =
       runST
@@ -54,7 +57,7 @@ parse inp =
             sizeRef   <- fmap asURef $ newRef 0
             parentRef <- fmap asURef $ newRef 0
             process Process {
-                openF = \(PS _ name_start name_len) -> do
+                openF = \(BS name_start name_len) -> do
                  let tag = 0x00
                      tag_end = -1
                  index <- readRef sizeRef
@@ -71,10 +74,10 @@ parse inp =
                     writeRef sizeRef (index + 5)
                     UMV.write v' index tag
                     UMV.write v' (index + 1) tag_parent
-                    UMV.write v' (index + 2) (name_start - offset0)
+                    UMV.write v' (index + 2) (minusForeignPtr name_start offset0)
                     UMV.write v' (index + 3) name_len
                     UMV.write v' (index + 4) tag_end
-              , attrF = \(PS _ key_start key_len) (PS _ value_start value_len) -> do
+              , attrF = \(BS key_start key_len) (BS value_start value_len) -> do
                  index <- readRef sizeRef
                  v' <-
                    do v <- readSTRef vecRef
@@ -87,12 +90,12 @@ parse inp =
                  let tag = 0x02
                  do writeRef sizeRef (index + 5)
                  do UMV.write v' index tag
-                    UMV.write v' (index + 1) (key_start - offset0)
+                    UMV.write v' (index + 1) (minusForeignPtr key_start offset0)
                     UMV.write v' (index + 2) key_len
-                    UMV.write v' (index + 3) (value_start - offset0)
+                    UMV.write v' (index + 3) (minusForeignPtr value_start offset0)
                     UMV.write v' (index + 4) value_len
               , endOpenF = \_ -> return ()
-              , textF = \(PS _ text_start text_len) -> do
+              , textF = \(BS text_start text_len) -> do
                  let tag = 0x01
                  index <- readRef sizeRef
                  v' <-
@@ -105,9 +108,9 @@ parse inp =
                           return v'
                  do writeRef sizeRef (index + 3)
                  do UMV.write v' index tag
-                    UMV.write v' (index + 1) (text_start - offset0)
+                    UMV.write v' (index + 1) (minusForeignPtr text_start offset0)
                     UMV.write v' (index + 2) text_len
-              , closeF = \closeTag@(PS s _ _) -> do
+              , closeF = \closeTag@(BS _ _) -> do
                  v <- readSTRef vecRef
                  -- Set the tag_end slot of the parent.
                  index <- readRef sizeRef
@@ -118,14 +121,14 @@ parse inp =
                                     else do
                                       parent_name <- UMV.read v (parent + 2)
                                       parent_len  <- UMV.read v (parent + 3)
-                                      let openTag  = PS s (parent_name+offset0) parent_len
+                                      let openTag  = BS (BS.plusForeignPtr offset0 parent_name) parent_len
                                       return       $ openTag == closeTag
                    UMV.write                  v (parent + 4) index
                    -- Pop the stack and return to the parent element.
                    previousParent <- UMV.read v (parent + 1)
                    writeRef parentRef previousParent
                    return correctTag -- continue closing tags, until matching one is found
-              , cdataF = \(PS _ cdata_start cdata_len) -> do
+              , cdataF = \(BS cdata_start cdata_len) -> do
                  let tag = 0x03
                  index <- readRef sizeRef
                  v' <-
@@ -138,7 +141,7 @@ parse inp =
                           return v'
                  do writeRef sizeRef (index + 3)
                  do UMV.write v' index tag
-                    UMV.write v' (index + 1) (cdata_start - offset0)
+                    UMV.write v' (index + 1) (minusForeignPtr cdata_start offset0)
                     UMV.write v' (index + 2) cdata_len
               } str
             wet <- readSTRef vecRef
@@ -153,3 +156,7 @@ untilM loop = do
     True  -> return ()
     False -> untilM loop
 
+minusForeignPtr :: ForeignPtr a -> ForeignPtr b -> Int
+minusForeignPtr fpA fpB = unsafeDupablePerformIO $
+  withForeignPtr fpA $ \ptrA -> withForeignPtr fpB $ \ptrB ->
+    pure (minusPtr ptrA ptrB)
