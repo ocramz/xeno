@@ -3,6 +3,7 @@
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE CPP                        #-}
 -- | DOM parser and API for XML.
 
 module Xeno.DOM
@@ -18,15 +19,21 @@ module Xeno.DOM
 import           Control.Monad.ST
 import           Control.Spork
 import           Data.ByteString          (ByteString)
+#if MIN_VERSION_bytestring(0,11,0)
 import           Data.ByteString.Internal (ByteString(BS))
+#else
+import           Data.ByteString.Internal (ByteString(PS))
+#endif
 import qualified Data.ByteString as S
 import           Data.Mutable
 import           Data.STRef
 import qualified Data.Vector.Unboxed as UV
 import qualified Data.Vector.Unboxed.Mutable as UMV
+#if MIN_VERSION_bytestring(0,11,0)
 import           Foreign.Ptr (minusPtr)
 import           Foreign.ForeignPtr (ForeignPtr, withForeignPtr)
 import           System.IO.Unsafe (unsafeDupablePerformIO)
+#endif
 import           Xeno.SAX
 import           Xeno.Types
 import           Xeno.DOM.Internal
@@ -44,7 +51,11 @@ parse str =
           -- characters
           Just 0x1 -> go (n+3)
           _        -> Nothing
+#if MIN_VERSION_bytestring(0,11,0)
     BS offset0 _ = str
+#else
+    PS _ offset0 _ = str
+#endif
     node =
       let !initialSize = max 1000 (S.length str `div` 8) in
       runST
@@ -53,7 +64,11 @@ parse str =
             sizeRef <- fmap asURef (newRef 0)
             parentRef <- fmap asURef (newRef 0)
             process Process {
+#if MIN_VERSION_bytestring(0,11,0)
                 openF = \(BS name_start name_len) -> do
+#else
+                openF = \(PS _ name_start name_len) -> do
+#endif
                      let tag = 0x00
                          tag_end = -1
                      index <- readRef sizeRef
@@ -70,10 +85,14 @@ parse str =
                         writeRef sizeRef (index + 5)
                      do UMV.unsafeWrite v' index tag
                         UMV.unsafeWrite v' (index + 1) tag_parent
-                        UMV.unsafeWrite v' (index + 2) (minusForeignPtr name_start offset0)
+                        UMV.unsafeWrite v' (index + 2) (distance name_start offset0)
                         UMV.unsafeWrite v' (index + 3) name_len
                         UMV.unsafeWrite v' (index + 4) tag_end
+#if MIN_VERSION_bytestring(0,11,0)
               , attrF = \(BS key_start key_len) (BS value_start value_len) -> do
+#else
+              , attrF = \(PS _ key_start key_len) (PS _ value_start value_len) -> do
+#endif
                      index <- readRef sizeRef
                      v' <-
                        do v <- readSTRef vecRef
@@ -86,12 +105,16 @@ parse str =
                      let tag = 0x02
                      do writeRef sizeRef (index + 5)
                      do UMV.unsafeWrite v' index tag
-                        UMV.unsafeWrite v' (index + 1) (minusForeignPtr key_start offset0)
+                        UMV.unsafeWrite v' (index + 1) (distance key_start offset0)
                         UMV.unsafeWrite v' (index + 2) key_len
-                        UMV.unsafeWrite v' (index + 3) (minusForeignPtr value_start offset0)
+                        UMV.unsafeWrite v' (index + 3) (distance value_start offset0)
                         UMV.unsafeWrite v' (index + 4) value_len
               , endOpenF = \_ -> return ()
+#if MIN_VERSION_bytestring(0,11,0)
               , textF = \(BS text_start text_len) -> do
+#else
+              , textF = \(PS _ text_start text_len) -> do
+#endif
                      let tag = 0x01
                      index <- readRef sizeRef
                      v' <-
@@ -104,7 +127,7 @@ parse str =
                               return v'
                      do writeRef sizeRef (index + 3)
                      do UMV.unsafeWrite v' index tag
-                        UMV.unsafeWrite v' (index + 1) (minusForeignPtr text_start offset0)
+                        UMV.unsafeWrite v' (index + 1) (distance text_start offset0)
                         UMV.unsafeWrite v' (index + 2) text_len
               , closeF = \_ -> do
                      v <- readSTRef vecRef
@@ -115,7 +138,11 @@ parse str =
                      -- Pop the stack and return to the parent element.
                      previousParent <- UMV.unsafeRead v (parent + 1)
                      writeRef parentRef previousParent
+#if MIN_VERSION_bytestring(0,11,0)
               , cdataF = \(BS cdata_start cdata_len) -> do
+#else
+              , cdataF = \(PS _ cdata_start cdata_len) -> do
+#endif
                      let tag = 0x03
                      index <- readRef sizeRef
                      v' <- do
@@ -128,7 +155,7 @@ parse str =
                            return v'
                      writeRef sizeRef (index + 3)
                      UMV.unsafeWrite v' index tag
-                     UMV.unsafeWrite v' (index + 1) (minusForeignPtr cdata_start offset0)
+                     UMV.unsafeWrite v' (index + 1) (distance cdata_start offset0)
                      UMV.unsafeWrite v' (index + 2) cdata_len
               } str
             wet <- readSTRef vecRef
@@ -143,7 +170,7 @@ parse str =
                 predictGrowSize bsStart bsLen index vecLen =
                     let -- at least 1 so we don't divide by zero below and end up with 
                         -- a negative grow size if (bsStart + bsLen - offset0) == 0
-                        processedLen = max 1 (minusForeignPtr bsStart offset0 + bsLen)
+                        processedLen = max 1 (distance bsStart offset0 + bsLen)
                         -- 1. Using integral operations, such as
                         --    "predictedTotalSize = (index * S.length str) `div` processedLen"
                         --    cause overflow, so we use float.
@@ -154,7 +181,15 @@ parse str =
                         growSize = predictedTotalSize - vecLen
                     in growSize
 
+#if MIN_VERSION_bytestring(0,11,0)
 minusForeignPtr :: ForeignPtr a -> ForeignPtr b -> Int
 minusForeignPtr fpA fpB = unsafeDupablePerformIO $
   withForeignPtr fpA $ \ptrA -> withForeignPtr fpB $ \ptrB ->
     pure (minusPtr ptrA ptrB)
+
+distance :: ForeignPtr a -> ForeignPtr b -> Int
+distance = minusForeignPtr
+#else
+distance :: Int -> Int -> Int
+distance a b = a - b
+#endif
