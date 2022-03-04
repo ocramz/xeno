@@ -1,5 +1,5 @@
 name: xeno
-version: 0.4.3
+version: 0.5
 synopsis: A fast event-based XML parser in pure Haskell
 description: A fast, low-memory use, event-based XML parser in pure Haskell.  
 build-type: Simple
@@ -10,7 +10,7 @@ license: BSD3
 license-file: LICENSE
 author: Christopher Done
 maintainer: Marco Zocca (ocramz fripost org)
-tested-with:         GHC == 8.0.1, GHC == 8.2.2, GHC == 8.4.2, GHC == 8.4.4, GHC == 8.6.5
+tested-with:         GHC == 8.0.1, GHC == 8.2.2, GHC == 8.4.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 9.0.1
 extra-source-files:  README.md
                      CHANGELOG.markdown
                      CONTRIBUTORS.md
@@ -22,6 +22,10 @@ source-repository head
                      
 flag libxml2
   description:   Include libxml2 in the benchmarks
+  default:       False
+
+flag whitespace-around-equals
+  description:   Correctly parse whitespace around the = characters in attribute definitions
   default:       False
 
 library
@@ -37,6 +41,9 @@ library
                , array >= 0.5.1
                , mutable-containers >= 0.3.3
                , mtl >= 2.2.1
+  if flag(whitespace-around-equals)
+    cpp-options: -DWHITESPACE_AROUND_EQUALS
+
   default-language: Haskell2010
 
 test-suite xeno-test
@@ -47,6 +54,8 @@ test-suite xeno-test
                -- | DEBUG 
                , hspec
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
+  if flag(whitespace-around-equals)
+    cpp-options: -DWHITESPACE_AROUND_EQUALS
   default-language: Haskell2010
 
 benchmark xeno-speed-bench

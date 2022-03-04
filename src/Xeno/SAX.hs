@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns        #-}
 {-# LANGUAGE BinaryLiterals      #-}
 {-# LANGUAGE LambdaCase          #-}
@@ -323,8 +324,13 @@ process !(Process {openF, attrF, endOpenF, textF, closeF, cdataF}) str = findLT 
       = throw (XenoParseError index ("Expected =, got: " <> S.singleton (s_index' str afterAttrName) <> " at character index: " <> (S8.pack . show) afterAttrName))
       where
         index = skipSpaces str index0
+#ifdef WHITESPACE_AROUND_EQUALS
+        afterAttrName = skipSpaces str (parseName str index)
+        quoteIndex = skipSpaces str (afterAttrName + 1)
+#else
         afterAttrName = parseName str index
         quoteIndex = afterAttrName + 1
+#endif
         usedChar = s_index' str quoteIndex
 
 {-# INLINE process #-}
