@@ -138,7 +138,7 @@ validateEx s =
                s)
             readSTRef tags >>= \case
                 [] -> return ()
-                tags' -> fail $ "Not all tags closed: " ++ show tags'
+                tags' -> error $ "Not all tags closed: " ++ show tags'
          ) of
     Left (_ :: XenoException) -> False
     Right _ -> True
