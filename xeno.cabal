@@ -1,5 +1,5 @@
 name: xeno
-version: 0.5
+version: 0.6
 synopsis: A fast event-based XML parser in pure Haskell
 description: A fast, low-memory use, event-based XML parser in pure Haskell.  
 build-type: Simple
@@ -10,7 +10,7 @@ license: BSD3
 license-file: LICENSE
 author: Christopher Done
 maintainer: Marco Zocca (ocramz fripost org)
-tested-with:         GHC == 8.0.1, GHC == 8.2.2, GHC == 8.4.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 9.0.1
+tested-with:         GHC == 8.0.1, GHC == 8.2.2, GHC == 8.4.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 9.0.1, GHC == 9.0.4
 extra-source-files:  README.md
                      CHANGELOG.markdown
                      CONTRIBUTORS.md

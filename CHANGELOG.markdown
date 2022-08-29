@@ -1,3 +1,8 @@
+    0.6
+    * GHC 9.4 compatibility :
+        * get rid of MonadFail (ST s) instance use
+    * mtl-2.3 compatibility
+
     0.4.3
     * Ensure we don't grow with a negative size in DOM parser (#48)
     * Flatten code nesting in process function (#45)
