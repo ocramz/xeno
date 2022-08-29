@@ -5,9 +5,7 @@
 {-# LANGUAGE NamedFieldPuns      #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-
 -- | SAX parser and API for XML.
-
 module Xeno.SAX
   ( process
   , Process(..)
