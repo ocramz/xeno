@@ -5,9 +5,7 @@
 {-# LANGUAGE NamedFieldPuns      #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# options_ghc -Wno-unused-imports #-}
 -- | SAX parser and API for XML.
-
 module Xeno.SAX
   ( process
   , Process(..)
@@ -19,20 +17,21 @@ module Xeno.SAX
   , skipDoctype
   ) where
 
-import           Control.Exception
-import           Control.Monad.ST
-import           Control.Monad.State.Strict
-import           Control.Spork
-import           Data.Bits
+import           Control.Exception (throw)
+import           Control.Monad (unless)
+import           Control.Monad.ST (ST, runST)
+import           Control.Monad.State.Strict (State, evalStateT, execState, modify', lift, get, put)
+import           Control.Spork (spork)
+import           Data.Bits (testBit)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Unsafe as SU
-import           Data.Char(isSpace)
-import           Data.Functor.Identity
-import           Data.Semigroup
-import           Data.STRef
-import           Data.Word
+import           Data.Char (isSpace)
+import           Data.Functor.Identity (Identity(..))
+import           Data.Semigroup ()
+import           Data.STRef (newSTRef, modifySTRef', readSTRef)
+import           Data.Word (Word8, Word64)
 import           Xeno.Types
 
 
