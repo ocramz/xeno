@@ -39,7 +39,7 @@ library
                , vector >= 0.11
                , deepseq >= 1.4.2
                , array >= 0.5.1
-               , mutable-containers >= 0.3.3
+               , unboxed-ref >= 0.4 && < 0.5
                , mtl >= 2.2.1
   if flag(whitespace-around-equals)
     cpp-options: -DWHITESPACE_AROUND_EQUALS
