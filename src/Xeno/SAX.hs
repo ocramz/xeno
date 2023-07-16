@@ -15,6 +15,7 @@ module Xeno.SAX
   , validateEx
   , dump
   , skipDoctype
+  , skipXml
   ) where
 
 import           Control.Exception (throw)
@@ -503,8 +504,15 @@ closeAngleBracketChar = 93
 
 -- | Skip initial DOCTYPE declaration
 skipDoctype :: ByteString -> ByteString
-skipDoctype arg =
-    if "<!DOCTYPE" `S8.isPrefixOf` bs
+skipDoctype = skipTag "<!DOCTYPE" 
+
+-- | Skip initial ?xml declaration
+skipXml :: BS.ByteString -> BS.ByteString
+skipXml = skipTag "<?xml"
+
+skipTag :: BS.ByteString -> BS.ByteString -> BS.ByteString
+skipTag tag arg =
+    if tag `S8.isPrefixOf` bs
       then let (_, rest)=">" `S8.breakSubstring` bs
            in skipBlanks $ S8.drop 1 rest
       else bs
